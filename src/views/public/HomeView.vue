@@ -3,7 +3,9 @@ import { ref, onMounted } from 'vue'
 import { getPrograms } from '@/api/programs'
 import { getNews } from '@/api/content'
 import { getCalls } from '@/api/calls'
+import { useToast } from 'primevue/usetoast'
 
+const toast = useToast()
 const programs = ref([])
 const news = ref([])
 const calls = ref([])
@@ -20,7 +22,7 @@ onMounted(async () => {
     news.value = newsRes.data.items
     calls.value = callsRes.data.items
   } catch {
-    // silently fail for homepage
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load homepage content', life: 5000 })
   } finally {
     loading.value = false
   }
