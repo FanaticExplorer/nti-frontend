@@ -21,11 +21,30 @@ const form = ref({
   end_date: null
 })
 
-const statusOptions = [
-  { label: 'Open', value: 'open' },
-  { label: 'Closed', value: 'closed' },
-  { label: 'Draft', value: 'draft' }
-]
+const STATUS_LABELS = {
+  draft: 'Draft',
+  open: 'Open',
+  matching: 'Matching',
+  assigned: 'Assigned',
+  in_progress: 'In Progress',
+  closed: 'Closed'
+}
+
+const ALLOWED_TRANSITIONS = {
+  draft: ['open'],
+  open: ['matching', 'closed'],
+  matching: ['assigned', 'closed'],
+  assigned: ['in_progress', 'closed'],
+  in_progress: ['closed'],
+  closed: []
+}
+
+function getAllowedTransitions(status) {
+  return (ALLOWED_TRANSITIONS[status] || []).map(s => ({
+    label: STATUS_LABELS[s],
+    value: s
+  }))
+}
 
 onMounted(fetchCalls)
 
@@ -145,7 +164,7 @@ async function handleStatusChange(call, newStatus) {
           <template #body="{ data }">
             <div class="flex gap-1">
               <Button icon="pi pi-pencil" text size="small" @click="openEdit(data)" />
-              <Dropdown v-model="data.status" :options="statusOptions" optionLabel="label" optionValue="value" @change="(e) => handleStatusChange(data, e.value)" class="w-8rem" />
+              <Dropdown v-model="data.status" :options="getAllowedTransitions(data.status)" optionLabel="label" optionValue="value" @change="(e) => handleStatusChange(data, e.value)" class="w-8rem" />
             </div>
           </template>
         </Column>

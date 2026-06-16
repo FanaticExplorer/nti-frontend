@@ -12,11 +12,30 @@ const saving = ref(false)
 const form = ref({ title: '', description: '', start_date: null, end_date: null })
 const toast = useToast()
 
-const statusOptions = [
-  { label: 'Draft', value: 'draft' },
-  { label: 'Open', value: 'open' },
-  { label: 'Closed', value: 'closed' }
-]
+const STATUS_LABELS = {
+  draft: 'Draft',
+  open: 'Open',
+  matching: 'Matching',
+  assigned: 'Assigned',
+  in_progress: 'In Progress',
+  closed: 'Closed'
+}
+
+const ALLOWED_TRANSITIONS = {
+  draft: ['open'],
+  open: ['matching', 'closed'],
+  matching: ['assigned', 'closed'],
+  assigned: ['in_progress', 'closed'],
+  in_progress: ['closed'],
+  closed: []
+}
+
+function getAllowedTransitions(status) {
+  return (ALLOWED_TRANSITIONS[status] || []).map(s => ({
+    label: STATUS_LABELS[s],
+    value: s
+  }))
+}
 
 onMounted(fetchCalls)
 
@@ -117,7 +136,7 @@ async function handleStatusChange(call, newStatus) {
               <Button icon="pi pi-pencil" text size="small" @click="openEdit(data)" />
               <Dropdown
                 :modelValue="data.status"
-                :options="statusOptions"
+                :options="getAllowedTransitions(data.status)"
                 optionLabel="label"
                 optionValue="value"
                 @change="(e) => handleStatusChange(data, e.value)"

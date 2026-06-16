@@ -33,7 +33,7 @@ onMounted(async () => {
       <div class="surface-card p-4 border-round shadow-1">
         <h1 class="text-2xl mb-2">{{ article.title }}</h1>
         <small class="text-color-secondary">{{ new Date(article.published_at).toLocaleDateString() }}</small>
-        <div class="mt-4 text-color-secondary" style="white-space: pre-wrap;">{{ article.body }}</div>
+        <div class="mt-4 text-color-secondary" style="white-space: pre-wrap;" v-html="article.body"></div>
       </div>
     </template>
     <div v-else class="text-center text-color-secondary p-4">Article not found.</div>
