@@ -1,0 +1,103 @@
+<script setup>
+import { ref, onMounted } from 'vue'
+import { getNews, createNews, updateNews } from '@/api/content'
+import { useToastStore } from '@/stores/toast'
+
+const news = ref([])
+const loading = ref(true)
+const showDialog = ref(false)
+const editItem = ref(null)
+const saving = ref(false)
+const form = ref({ title: '', slug: '', body: '', is_published: false })
+const toast = useToastStore()
+
+onMounted(fetchNews)
+
+async function fetchNews() {
+  loading.value = true
+  try {
+    const { data } = await getNews()
+    news.value = data.items
+  } catch { toast.error('Error', 'Failed to load data') } finally {
+    loading.value = false
+  }
+}
+
+function openCreate() {
+  editItem.value = null
+  form.value = { title: '', slug: '', body: '', is_published: false }
+  showDialog.value = true
+}
+
+function openEdit(item) {
+  editItem.value = item
+  form.value = { ...item }
+  showDialog.value = true
+}
+
+async function handleSave() {
+  saving.value = true
+  try {
+    if (editItem.value) {
+      await updateNews(editItem.value.id, form.value)
+    } else {
+      await createNews(form.value)
+    }
+    showDialog.value = false
+    await fetchNews()
+  } catch { toast.error('Error', 'Action failed') } finally {
+    saving.value = false
+  }
+}
+</script>
+
+<template>
+  <div>
+    <div class="flex justify-content-between align-items-center mb-4">
+      <h2 class="m-0">News</h2>
+      <Button label="Create" icon="pi pi-plus" @click="openCreate" />
+    </div>
+
+    <Dialog v-model:visible="showDialog" :header="editItem ? 'Edit News' : 'Create News'" :modal="true" :style="{ width: '600px' }">
+      <div class="flex flex-column gap-3">
+        <InputText v-model="form.title" placeholder="Title" />
+        <InputText v-model="form.slug" placeholder="Slug" />
+        <Textarea v-model="form.body" placeholder="Body" rows="8" />
+        <div class="flex align-items-center gap-2">
+          <Checkbox v-model="form.is_published" :binary="true" />
+          <label>Published</label>
+        </div>
+      </div>
+      <template #footer>
+        <Button label="Cancel" severity="secondary" @click="showDialog = false" />
+        <Button label="Save" :loading="saving" @click="handleSave" />
+      </template>
+    </Dialog>
+
+    <div v-if="loading" class="flex justify-content-center p-4">
+      <ProgressBar mode="indeterminate" style="width: 300px;" />
+    </div>
+    <div v-else-if="news.length" class="surface-card border-round shadow-1 p-3">
+      <DataTable :value="news" class="p-datatable-sm">
+        <Column field="title" header="Title" />
+        <Column field="slug" header="Slug" />
+        <Column header="Published">
+          <template #body="{ data }">
+            {{ data.published_at ? new Date(data.published_at).toLocaleDateString() : '-' }}
+          </template>
+        </Column>
+        <Column header="Status">
+          <template #body="{ data }">
+            <Tag :value="data.is_published ? 'Published' : 'Draft'" :severity="data.is_published ? 'success' : 'secondary'" />
+          </template>
+        </Column>
+        <Column header="">
+          <template #body="{ data }">
+            <Button icon="pi pi-pencil" text size="small" @click="openEdit(data)" />
+          </template>
+        </Column>
+      </DataTable>
+    </div>
+    <div v-else class="text-center text-color-secondary p-4">No news articles.</div>
+  </div>
+</template>
