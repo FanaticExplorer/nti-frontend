@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useAbortController } from '@/composables/useAbortController'
 import { getPrograms, createProgram, updateProgram } from '@/api/programs'
 import { useToast } from 'primevue/usetoast'
 
@@ -10,13 +11,14 @@ const editItem = ref(null)
 const saving = ref(false)
 const form = ref({ title: '', type: 'A', description: '', rules: '', is_active: true })
 const toast = useToast()
+const { signal } = useAbortController()
 
 onMounted(fetchPrograms)
 
 async function fetchPrograms() {
   loading.value = true
   try {
-    const { data } = await getPrograms()
+    const { data } = await getPrograms(undefined, { signal })
     programs.value = data.items
   } catch { toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 }) } finally {
     loading.value = false

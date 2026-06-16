@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useAbortController } from '@/composables/useAbortController'
 import { getPages, createPage, updatePage } from '@/api/content'
 import { useToast } from 'primevue/usetoast'
 
@@ -10,13 +11,14 @@ const editItem = ref(null)
 const saving = ref(false)
 const form = ref({ title: '', slug: '', body: '', meta_title: '', meta_description: '', is_published: false })
 const toast = useToast()
+const { signal } = useAbortController()
 
 onMounted(fetchPages)
 
 async function fetchPages() {
   loading.value = true
   try {
-    const { data } = await getPages()
+    const { data } = await getPages(undefined, { signal })
     pages.value = data.items
   } catch { toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 }) } finally {
     loading.value = false

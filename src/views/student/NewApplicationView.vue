@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useAbortController } from '@/composables/useAbortController'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { getCalls } from '@/api/calls'
@@ -9,6 +10,7 @@ import { createApplication } from '@/api/applications'
 const route = useRoute()
 const router = useRouter()
 const toast = useToast()
+const { signal } = useAbortController()
 
 const step = ref(1)
 const calls = ref([])
@@ -28,8 +30,8 @@ const formData = ref({
 onMounted(async () => {
   try {
     const [callsRes, teamsRes] = await Promise.all([
-      getCalls(),
-      getMyTeams()
+      getCalls(undefined, { signal }),
+      getMyTeams(undefined, { signal })
     ])
     calls.value = callsRes.data.items
     teams.value = teamsRes.data.items
@@ -38,7 +40,8 @@ onMounted(async () => {
     if (callId) {
       selectedCall.value = calls.value.find((c) => c.id.toString() === callId.toString()) || null
     }
-  } catch {
+  } catch (err) {
+    if (err?.code === "ERR_CANCELED") return
     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 })
   } finally {
     loading.value = false
@@ -57,6 +60,7 @@ async function handleSave() {
     router.push(`/student/applications/${data.id}`)
     toast.add({ severity: 'success', summary: 'Application saved as draft', life: 3000 })
   } catch (err) {
+    if (err?.code === "ERR_CANCELED") return
     toast.add({ severity: 'error', summary: 'Error', detail: err?.response?.data?.detail || 'Action failed', life: 5000 })
   } finally {
     saving.value = false

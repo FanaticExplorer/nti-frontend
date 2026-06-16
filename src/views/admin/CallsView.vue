@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useAbortController } from '@/composables/useAbortController'
 import { getCalls, createCall, updateCall, changeCallStatus } from '@/api/calls'
 import { useToast } from 'primevue/usetoast'
 import StatusBadge from '@/components/StatusBadge.vue'
@@ -11,6 +12,7 @@ const editItem = ref(null)
 const saving = ref(false)
 const form = ref({ title: '', description: '', start_date: null, end_date: null })
 const toast = useToast()
+const { signal } = useAbortController()
 
 const STATUS_LABELS = {
   draft: 'Draft',
@@ -42,7 +44,7 @@ onMounted(fetchCalls)
 async function fetchCalls() {
   loading.value = true
   try {
-    const { data } = await getCalls()
+    const { data } = await getCalls(undefined, { signal })
     calls.value = data.items
   } catch { toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 }) } finally {
     loading.value = false

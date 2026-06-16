@@ -1,10 +1,12 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useAbortController } from '@/composables/useAbortController'
 import { getCalls } from '@/api/calls'
 import { useToast } from 'primevue/usetoast'
 import StatusBadge from '@/components/StatusBadge.vue'
 
 const toast = useToast()
+const { signal } = useAbortController()
 const calls = ref([])
 const loading = ref(true)
 const filterProgram = ref(null)
@@ -28,9 +30,10 @@ async function fetchCalls() {
     const params = {}
     if (filterProgram.value) params.program_type = filterProgram.value
     if (filterStatus.value) params.status = filterStatus.value
-    const { data } = await getCalls(params)
+    const { data } = await getCalls(params, { signal })
     calls.value = data.items
-  } catch {
+  } catch (err) {
+    if (err?.code === "ERR_CANCELED") return
     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 })
   } finally {
     loading.value = false

@@ -1,4 +1,4 @@
 import api from './index.js'
 
-export const getMyProfile = () => api.get('/profiles/me')
+export const getMyProfile = (config = {}) => api.get('/profiles/me', config)
 export const updateMyProfile = (data) => api.put('/profiles/me', data)

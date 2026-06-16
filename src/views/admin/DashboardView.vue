@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useAbortController } from '@/composables/useAbortController'
 import { getStats, exportApplications } from '@/api/admin'
 import { useToast } from 'primevue/usetoast'
 import Chart from 'primevue/chart'
@@ -9,6 +10,7 @@ const loading = ref(true)
 const barData = ref(null)
 const pieData = ref(null)
 const toast = useToast()
+const { signal } = useAbortController()
 
 const chartOptions = {
   responsive: true,
@@ -19,7 +21,7 @@ const chartOptions = {
 
 onMounted(async () => {
   try {
-    const { data } = await getStats()
+    const { data } = await getStats(undefined, { signal })
     stats.value = data
 
     if (data.applications_by_status) {
@@ -48,7 +50,7 @@ onMounted(async () => {
 
 async function handleExport() {
   try {
-    const res = await exportApplications()
+    const res = await exportApplications(undefined, { signal })
     const url = URL.createObjectURL(res.data)
     const a = document.createElement('a')
     a.href = url

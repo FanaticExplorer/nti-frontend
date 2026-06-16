@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useAbortController } from '@/composables/useAbortController'
 import { getAllApplications } from '@/api/applications'
 import { useToast } from 'primevue/usetoast'
 import StatusBadge from '@/components/StatusBadge.vue'
@@ -7,12 +8,14 @@ import StatusBadge from '@/components/StatusBadge.vue'
 const applications = ref([])
 const loading = ref(true)
 const toast = useToast()
+const { signal } = useAbortController()
 
 onMounted(async () => {
   try {
-    const { data } = await getAllApplications({ status: 'under_evaluation' })
+    const { data } = await getAllApplications({ status: 'under_evaluation' }, { signal })
     applications.value = data.items
-  } catch {
+  } catch (err) {
+    if (err?.code === "ERR_CANCELED") return
     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 })
   } finally {
     loading.value = false

@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useAbortController } from '@/composables/useAbortController'
 import { useRoute } from 'vue-router'
 import { getProgram } from '@/api/programs'
 import { getCalls } from '@/api/calls'
@@ -7,6 +8,7 @@ import { useToast } from 'primevue/usetoast'
 
 const route = useRoute()
 const toast = useToast()
+const { signal } = useAbortController()
 const program = ref(null)
 const calls = ref([])
 const loading = ref(true)
@@ -15,11 +17,12 @@ onMounted(async () => {
   try {
     const [progRes, callsRes] = await Promise.all([
       getProgram(route.params.id),
-      getCalls({ program_id: route.params.id })
+      getCalls({ program_id: route.params.id }, { signal })
     ])
     program.value = progRes.data
     calls.value = callsRes.data.items
-  } catch {
+  } catch (err) {
+    if (err?.code === "ERR_CANCELED") return
     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 })
   } finally {
     loading.value = false

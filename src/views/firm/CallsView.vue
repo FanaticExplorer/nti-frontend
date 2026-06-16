@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useAbortController } from '@/composables/useAbortController'
 import { getCalls, createCall, updateCall, changeCallStatus } from '@/api/calls'
 import { useToast } from 'primevue/usetoast'
 import StatusBadge from '@/components/StatusBadge.vue'
@@ -11,6 +12,7 @@ const showEdit = ref(false)
 const saving = ref(false)
 const editCall = ref(null)
 const toast = useToast()
+const { signal } = useAbortController()
 
 const form = ref({
   title: '',
@@ -51,9 +53,10 @@ onMounted(fetchCalls)
 async function fetchCalls() {
   loading.value = true
   try {
-    const { data } = await getCalls()
+    const { data } = await getCalls(undefined, { signal })
     calls.value = data.items
-  } catch {
+  } catch (err) {
+    if (err?.code === "ERR_CANCELED") return
     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 })
   } finally {
     loading.value = false
@@ -71,7 +74,8 @@ async function handleCreate() {
     await createCall(form.value)
     showCreate.value = false
     await fetchCalls()
-  } catch {
+  } catch (err) {
+    if (err?.code === "ERR_CANCELED") return
     toast.add({ severity: 'error', summary: 'Error', detail: 'Action failed', life: 5000 })
   } finally {
     saving.value = false
@@ -90,7 +94,8 @@ async function handleEdit() {
     await updateCall(editCall.value.id, form.value)
     showEdit.value = false
     await fetchCalls()
-  } catch {
+  } catch (err) {
+    if (err?.code === "ERR_CANCELED") return
     toast.add({ severity: 'error', summary: 'Error', detail: 'Action failed', life: 5000 })
   } finally {
     saving.value = false
@@ -101,7 +106,8 @@ async function handleStatusChange(call, newStatus) {
   try {
     await changeCallStatus(call.id, { status: newStatus })
     await fetchCalls()
-  } catch {
+  } catch (err) {
+    if (err?.code === "ERR_CANCELED") return
     toast.add({ severity: 'error', summary: 'Error', detail: 'Action failed', life: 5000 })
   }
 }

@@ -1,9 +1,11 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useAbortController } from '@/composables/useAbortController'
 import { getMyTeams, createTeam } from '@/api/teams'
 import { useToast } from 'primevue/usetoast'
 
 const toast = useToast()
+const { signal } = useAbortController()
 const teams = ref([])
 const loading = ref(true)
 const showCreate = ref(false)
@@ -17,9 +19,10 @@ const programTypes = [
 
 onMounted(async () => {
   try {
-    const { data } = await getMyTeams()
+    const { data } = await getMyTeams(undefined, { signal })
     teams.value = data.items
-  } catch {
+  } catch (err) {
+    if (err?.code === "ERR_CANCELED") return
     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 })
   } finally {
     loading.value = false
@@ -32,9 +35,10 @@ async function handleCreate() {
     await createTeam(newTeam.value)
     showCreate.value = false
     newTeam.value = { name: '', program_type: 'A' }
-    const { data } = await getMyTeams()
+    const { data } = await getMyTeams(undefined, { signal })
     teams.value = data.items
-  } catch {
+  } catch (err) {
+    if (err?.code === "ERR_CANCELED") return
     toast.add({ severity: 'error', summary: 'Error', detail: 'Action failed', life: 5000 })
   } finally {
     creating.value = false

@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useAbortController } from '@/composables/useAbortController'
 import { useRoute } from 'vue-router'
 import { getMentorship, getMentorshipLogs, addMentorshipLog } from '@/api/mentorships'
 import { getMilestones, updateMilestoneStatus } from '@/api/milestones'
@@ -8,6 +9,7 @@ import StatusBadge from '@/components/StatusBadge.vue'
 
 const route = useRoute()
 const toast = useToast()
+const { signal } = useAbortController()
 const mentorship = ref(null)
 const milestones = ref([])
 const logs = ref([])
@@ -21,15 +23,16 @@ async function fetchData() {
   try {
     const [mRes, lRes] = await Promise.all([
       getMentorship(route.params.id),
-      getMentorshipLogs(route.params.id)
+      getMentorshipLogs(route.params.id, { signal })
     ])
     mentorship.value = mRes.data
     logs.value = lRes.data.items || lRes.data
     if (mRes.data.application_id) {
-      const { data } = await getMilestones(mRes.data.application_id)
+      const { data } = await getMilestones(mRes.data.application_id, { signal })
       milestones.value = data.items || data
     }
-  } catch {
+  } catch (err) {
+    if (err?.code === "ERR_CANCELED") return
     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 })
   } finally {
     loading.value = false
@@ -43,7 +46,8 @@ async function handleAddLog() {
     await addMentorshipLog(mentorship.value.id, { content: logText.value })
     logText.value = ''
     await fetchData()
-  } catch {
+  } catch (err) {
+    if (err?.code === "ERR_CANCELED") return
     toast.add({ severity: 'error', summary: 'Error', detail: 'Action failed', life: 5000 })
   } finally {
     logging.value = false
@@ -54,7 +58,8 @@ async function handleMilestoneStatus(milestone, newStatus) {
   try {
     await updateMilestoneStatus(milestone.id, { status: newStatus })
     await fetchData()
-  } catch {
+  } catch (err) {
+    if (err?.code === "ERR_CANCELED") return
     toast.add({ severity: 'error', summary: 'Error', detail: 'Action failed', life: 5000 })
   }
 }

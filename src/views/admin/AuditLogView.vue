@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useAbortController } from '@/composables/useAbortController'
 import { getAuditLog } from '@/api/admin'
 import { useToast } from 'primevue/usetoast'
 
@@ -11,6 +12,7 @@ const filterDateTo = ref(null)
 
 const expandedRows = ref([])
 const toast = useToast()
+const { signal } = useAbortController()
 
 onMounted(fetchLogs)
 
@@ -21,7 +23,7 @@ async function fetchLogs() {
     if (filterAction.value) params.action = filterAction.value
     if (filterDateFrom.value) params.date_from = filterDateFrom.value.toISOString().split('T')[0]
     if (filterDateTo.value) params.date_to = filterDateTo.value.toISOString().split('T')[0]
-    const { data } = await getAuditLog(params)
+    const { data } = await getAuditLog(params, { signal })
     logs.value = data.items
   } catch { toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 }) } finally {
     loading.value = false

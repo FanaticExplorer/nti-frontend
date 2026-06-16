@@ -4,8 +4,10 @@ import { getPrograms } from '@/api/programs'
 import { getNews } from '@/api/content'
 import { getCalls } from '@/api/calls'
 import { useToast } from 'primevue/usetoast'
+import { useAbortController } from '@/composables/useAbortController'
 
 const toast = useToast()
+const { signal } = useAbortController()
 const programs = ref([])
 const news = ref([])
 const calls = ref([])
@@ -14,14 +16,15 @@ const loading = ref(true)
 onMounted(async () => {
   try {
     const [progRes, newsRes, callsRes] = await Promise.all([
-      getPrograms(),
-      getNews({ limit: 3 }),
-      getCalls({ limit: 4 })
+      getPrograms(undefined, { signal }),
+      getNews({ limit: 3 }, { signal }),
+      getCalls({ limit: 4 }, { signal })
     ])
     programs.value = progRes.data.items
     news.value = newsRes.data.items
     calls.value = callsRes.data.items
-  } catch {
+  } catch (err) {
+    if (err?.code === "ERR_CANCELED") return
     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load homepage content', life: 5000 })
   } finally {
     loading.value = false

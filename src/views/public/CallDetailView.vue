@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import { useAbortController } from '@/composables/useAbortController'
 import { useRoute } from 'vue-router'
 import { getCall } from '@/api/calls'
 import { useAuthStore } from '@/stores/auth'
@@ -9,6 +10,7 @@ import StatusBadge from '@/components/StatusBadge.vue'
 const route = useRoute()
 const auth = useAuthStore()
 const toast = useToast()
+const { signal } = useAbortController()
 
 const call = ref(null)
 const loading = ref(true)
@@ -20,9 +22,10 @@ const canApply = computed(() => {
 
 onMounted(async () => {
   try {
-    const { data } = await getCall(route.params.id)
+    const { data } = await getCall(route.params.id, { signal })
     call.value = data
-  } catch {
+  } catch (err) {
+    if (err?.code === "ERR_CANCELED") return
     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 })
   } finally {
     loading.value = false

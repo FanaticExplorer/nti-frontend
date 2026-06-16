@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useAbortController } from '@/composables/useAbortController'
 import { useRoute } from 'vue-router'
 import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
@@ -9,6 +10,7 @@ import { useAuthStore } from '@/stores/auth'
 const route = useRoute()
 const auth = useAuthStore()
 const toast = useToast()
+const { signal } = useAbortController()
 const confirm = useConfirm()
 
 const team = ref(null)
@@ -24,10 +26,11 @@ onMounted(async () => {
 
 async function fetchTeam() {
   try {
-    const { data } = await getTeam(route.params.id)
+    const { data } = await getTeam(route.params.id, { signal })
     team.value = data
     isLeader.value = data.leader_id === auth.user?.id
-  } catch {
+  } catch (err) {
+    if (err?.code === "ERR_CANCELED") return
     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 })
   } finally {
     loading.value = false
@@ -41,7 +44,8 @@ async function handleInvite() {
     await inviteTeamMember(team.value.id, { email: inviteEmail.value })
     inviteEmail.value = ''
     await fetchTeam()
-  } catch {
+  } catch (err) {
+    if (err?.code === "ERR_CANCELED") return
     toast.add({ severity: 'error', summary: 'Error', detail: 'Action failed', life: 5000 })
   } finally {
     inviting.value = false
@@ -58,7 +62,8 @@ async function handleRemove(userId, userName) {
         toast.add({ severity: 'success', summary: 'Member removed', life: 3000 })
         await fetchTeam()
       } catch (err) {
-        toast.add({ severity: 'error', summary: 'Error', detail: err?.response?.data?.detail || 'Action failed', life: 5000 })
+    if (err?.code === "ERR_CANCELED") return
+    toast.add({ severity: 'error', summary: 'Error', detail: err?.response?.data?.detail || 'Action failed', life: 5000 })
       }
     }
   })

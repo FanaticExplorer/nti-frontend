@@ -1,10 +1,12 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useAbortController } from '@/composables/useAbortController'
 import { useToast } from 'primevue/usetoast'
 import { getOrganizations, updateOrganization, addOrganizationMember } from '@/api/organizations'
 import StatusBadge from '@/components/StatusBadge.vue'
 
 const toast = useToast()
+const { signal } = useAbortController()
 const org = ref(null)
 const loading = ref(true)
 const editing = ref(false)
@@ -17,12 +19,13 @@ const addingMember = ref(false)
 
 onMounted(async () => {
   try {
-    const { data } = await getOrganizations()
+    const { data } = await getOrganizations(undefined, { signal })
     org.value = data.items?.[0] || null
     if (org.value) {
       form.value = { ...org.value }
     }
-  } catch {
+  } catch (err) {
+    if (err?.code === "ERR_CANCELED") return
     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 })
   } finally {
     loading.value = false
@@ -37,6 +40,7 @@ async function handleSave() {
     editing.value = false
     toast.add({ severity: 'success', summary: 'Organization updated', life: 3000 })
   } catch (err) {
+    if (err?.code === "ERR_CANCELED") return
     toast.add({ severity: 'error', summary: 'Error', detail: err.response?.data?.detail || 'Action failed', life: 5000 })
   } finally {
     saving.value = false
@@ -50,9 +54,10 @@ async function handleAddMember() {
     await addOrganizationMember(org.value.id, { email: newMemberEmail.value, role_in_org: newMemberRole.value })
     newMemberEmail.value = ''
     newMemberRole.value = ''
-    const { data } = await getOrganizations()
+    const { data } = await getOrganizations(undefined, { signal })
     org.value = data.items?.[0] || null
-  } catch {
+  } catch (err) {
+    if (err?.code === "ERR_CANCELED") return
     toast.add({ severity: 'error', summary: 'Error', detail: 'Action failed', life: 5000 })
   } finally {
     addingMember.value = false

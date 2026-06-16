@@ -1,9 +1,11 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useAbortController } from '@/composables/useAbortController'
 import { getMyProfile, updateMyProfile } from '@/api/profiles'
 import { useToast } from 'primevue/usetoast'
 
 const toast = useToast()
+const { signal } = useAbortController()
 const profile = ref(null)
 const loading = ref(true)
 const editing = ref(false)
@@ -22,7 +24,7 @@ const form = ref({
 
 onMounted(async () => {
   try {
-    const { data } = await getMyProfile()
+    const { data } = await getMyProfile(undefined, { signal })
     profile.value = data
     Object.assign(form.value, data)
   } catch (err) {
@@ -46,7 +48,8 @@ async function handleSave() {
     const { data } = await updateMyProfile(payload)
     profile.value = data
     editing.value = false
-  } catch {
+  } catch (err) {
+    if (err?.code === "ERR_CANCELED") return
     toast.add({ severity: 'error', summary: 'Error', detail: 'Action failed', life: 5000 })
   } finally {
     saving.value = false

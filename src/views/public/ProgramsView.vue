@@ -1,17 +1,20 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useAbortController } from '@/composables/useAbortController'
 import { getPrograms } from '@/api/programs'
 import { useToast } from 'primevue/usetoast'
 
 const toast = useToast()
+const { signal } = useAbortController()
 const programs = ref([])
 const loading = ref(true)
 
 onMounted(async () => {
   try {
-    const { data } = await getPrograms()
+    const { data } = await getPrograms(undefined, { signal })
     programs.value = data.items
-  } catch {
+  } catch (err) {
+    if (err?.code === "ERR_CANCELED") return
     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 })
   } finally {
     loading.value = false

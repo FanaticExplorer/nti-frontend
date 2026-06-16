@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useAbortController } from '@/composables/useAbortController'
 import { useRoute } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { getApplication, submitApplication, getApplicationHistory, updateApplication } from '@/api/applications'
@@ -8,6 +9,7 @@ import StatusBadge from '@/components/StatusBadge.vue'
 
 const route = useRoute()
 const toast = useToast()
+const { signal } = useAbortController()
 const app = ref(null)
 const history = ref([])
 const loading = ref(true)
@@ -23,15 +25,16 @@ onMounted(async () => {
 
 async function fetchData() {
   try {
-    const appRes = await getApplication(route.params.id)
+    const appRes = await getApplication(route.params.id, { signal })
     app.value = appRes.data
     formData.value = { ...app.value.form_data }
 
     try {
-      const histRes = await getApplicationHistory(route.params.id)
+      const histRes = await getApplicationHistory(route.params.id, { signal })
       history.value = histRes.data.items || histRes.data
     } catch { /* ok if history fails */ }
-  } catch {
+  } catch (err) {
+    if (err?.code === "ERR_CANCELED") return
     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 })
   } finally {
     loading.value = false
@@ -45,6 +48,7 @@ async function handleSubmit() {
     toast.add({ severity: 'success', summary: 'Application submitted', life: 3000 })
     await fetchData()
   } catch (err) {
+    if (err?.code === "ERR_CANCELED") return
     toast.add({ severity: 'error', summary: 'Error', detail: err?.response?.data?.detail || 'Action failed', life: 5000 })
   } finally {
     submitting.value = false
@@ -59,6 +63,7 @@ async function handleSave() {
     editing.value = false
     await fetchData()
   } catch (err) {
+    if (err?.code === "ERR_CANCELED") return
     toast.add({ severity: 'error', summary: 'Error', detail: err?.response?.data?.detail || 'Action failed', life: 5000 })
   } finally {
     submitting.value = false
@@ -75,7 +80,8 @@ async function handleUpload(event) {
     fd.append('application_id', app.value.id)
     await uploadDocument(fd)
     await fetchData()
-  } catch {
+  } catch (err) {
+    if (err?.code === "ERR_CANCELED") return
     toast.add({ severity: 'error', summary: 'Error', detail: 'Action failed', life: 5000 })
   } finally {
     uploading.value = false
@@ -83,7 +89,7 @@ async function handleUpload(event) {
 }
 
 function downloadDocument(docId) {
-  getDocument(docId).then((res) => {
+  getDocument(docId, { signal }).then((res) => {
     const url = URL.createObjectURL(res.data)
     const a = document.createElement('a')
     a.href = url

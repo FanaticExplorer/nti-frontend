@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useAbortController } from '@/composables/useAbortController'
 import { getCalls } from '@/api/calls'
 import { getOrganizations } from '@/api/organizations'
 import { useAuthStore } from '@/stores/auth'
@@ -8,6 +9,7 @@ import StatusBadge from '@/components/StatusBadge.vue'
 
 const auth = useAuthStore()
 const toast = useToast()
+const { signal } = useAbortController()
 const calls = ref([])
 const org = ref(null)
 const loading = ref(true)
@@ -15,12 +17,13 @@ const loading = ref(true)
 onMounted(async () => {
   try {
     const [orgsRes, callsRes] = await Promise.all([
-      getOrganizations(),
-      getCalls()
+      getOrganizations(undefined, { signal }),
+      getCalls(undefined, { signal })
     ])
     org.value = orgsRes.data.items?.[0] || null
     calls.value = callsRes.data.items.filter((c) => c.organization_id === org.value?.id)
-  } catch {
+  } catch (err) {
+    if (err?.code === "ERR_CANCELED") return
     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 })
   } finally {
     loading.value = false

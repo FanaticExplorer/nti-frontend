@@ -1,10 +1,12 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useAbortController } from '@/composables/useAbortController'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import { getOrganizations, approveOrganization } from '@/api/organizations'
 
 const toast = useToast()
+const { signal } = useAbortController()
 const confirm = useConfirm()
 const orgs = ref([])
 const loading = ref(true)
@@ -14,7 +16,7 @@ onMounted(fetchOrgs)
 async function fetchOrgs() {
   loading.value = true
   try {
-    const { data } = await getOrganizations()
+    const { data } = await getOrganizations(undefined, { signal })
     orgs.value = data.items
   } catch { toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 }) } finally {
     loading.value = false

@@ -1,19 +1,22 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useAbortController } from '@/composables/useAbortController'
 import { useRoute } from 'vue-router'
 import { getNewsArticle } from '@/api/content'
 import { useToast } from 'primevue/usetoast'
 
 const route = useRoute()
 const toast = useToast()
+const { signal } = useAbortController()
 const article = ref(null)
 const loading = ref(true)
 
 onMounted(async () => {
   try {
-    const { data } = await getNewsArticle(route.params.slug)
+    const { data } = await getNewsArticle(route.params.slug, { signal })
     article.value = data
-  } catch {
+  } catch (err) {
+    if (err?.code === "ERR_CANCELED") return
     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 })
   } finally {
     loading.value = false

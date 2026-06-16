@@ -1,11 +1,13 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useAbortController } from '@/composables/useAbortController'
 import { getMyApplications } from '@/api/applications'
 import { getMyTeams } from '@/api/teams'
 import { useToast } from 'primevue/usetoast'
 import StatusBadge from '@/components/StatusBadge.vue'
 
 const toast = useToast()
+const { signal } = useAbortController()
 const applications = ref([])
 const teams = ref([])
 const loading = ref(true)
@@ -18,8 +20,8 @@ const approvedCount = ref(0)
 onMounted(async () => {
   try {
     const [appRes, teamRes] = await Promise.all([
-      getMyApplications(),
-      getMyTeams()
+      getMyApplications(undefined, { signal }),
+      getMyTeams(undefined, { signal })
     ])
     applications.value = appRes.data.items
     teams.value = teamRes.data.items
@@ -28,7 +30,8 @@ onMounted(async () => {
     draftCount.value = applications.value.filter((a) => a.status === 'draft').length
     submittedCount.value = applications.value.filter((a) => a.status === 'submitted').length
     approvedCount.value = applications.value.filter((a) => a.status === 'approved').length
-  } catch {
+  } catch (err) {
+    if (err?.code === "ERR_CANCELED") return
     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 })
   } finally {
     loading.value = false

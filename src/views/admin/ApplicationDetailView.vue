@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useAbortController } from '@/composables/useAbortController'
 import { useRoute } from 'vue-router'
 import { getApplication, changeApplicationStatus, getApplicationHistory } from '@/api/applications'
 import { getDocument } from '@/api/documents'
@@ -41,28 +42,29 @@ const statusTransitions = {
 
 const requiresComment = ['revision_requested', 'rejected']
 const toast = useToast()
+const { signal } = useAbortController()
 
 onMounted(fetchData)
 
 async function fetchData() {
   try {
-    const appRes = await getApplication(route.params.id)
+    const appRes = await getApplication(route.params.id, { signal })
     app.value = appRes.data
 
     try {
-      const histRes = await getApplicationHistory(route.params.id)
+      const histRes = await getApplicationHistory(route.params.id, { signal })
       history.value = histRes.data.items || histRes.data
     } catch { /* ok if history fails */ }
 
     try {
-      const usersRes = await getUsers({ role: 'mentor' })
+      const usersRes = await getUsers({ role: 'mentor' }, { signal })
       mentors.value = usersRes.data.items
     } catch { /* ok if user fetch fails */ }
 
     try {
       const [evRes, milRes] = await Promise.all([
         getEvaluations(app.value.id),
-        getMilestones(app.value.id)
+        getMilestones(app.value.id, { signal })
       ])
       evaluations.value = evRes.data.items || evRes.data
       milestones.value = milRes.data.items || milRes.data
@@ -119,7 +121,7 @@ async function handleAddMilestone() {
 }
 
 function downloadDocument(docId) {
-  getDocument(docId).then((res) => {
+  getDocument(docId, { signal }).then((res) => {
     const url = URL.createObjectURL(res.data)
     const a = document.createElement('a')
     a.href = url

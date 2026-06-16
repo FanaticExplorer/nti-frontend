@@ -1,11 +1,13 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useAbortController } from '@/composables/useAbortController'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import { getUsers, changeUserRole, deactivateUser } from '@/api/users'
 import RoleBadge from '@/components/RoleBadge.vue'
 
 const toast = useToast()
+const { signal } = useAbortController()
 const confirm = useConfirm()
 
 const users = ref([])
@@ -31,7 +33,7 @@ async function fetchUsers() {
   try {
     const params = {}
     if (filterRole.value) params.role = filterRole.value
-    const { data } = await getUsers(params)
+    const { data } = await getUsers(params, { signal })
     users.value = data.items
   } catch (err) { toast.add({ severity: 'error', summary: 'Error', detail: err?.response?.data?.detail || 'Action failed', life: 5000 }) } finally {
     loading.value = false
