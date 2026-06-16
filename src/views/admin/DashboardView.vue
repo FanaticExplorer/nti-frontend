@@ -1,14 +1,14 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { getStats, exportApplications } from '@/api/admin'
-import { useToastStore } from '@/stores/toast'
+import { useToast } from 'primevue/usetoast'
 import Chart from 'primevue/chart'
 
 const stats = ref(null)
 const loading = ref(true)
 const barData = ref(null)
 const pieData = ref(null)
-const toast = useToastStore()
+const toast = useToast()
 
 const chartOptions = {
   responsive: true,
@@ -41,7 +41,7 @@ onMounted(async () => {
         }]
       }
     }
-  } catch { toast.error('Error', 'Failed to load data') } finally {
+  } catch { toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 }) } finally {
     loading.value = false
   }
 })
@@ -55,7 +55,7 @@ async function handleExport() {
     a.download = 'applications.csv'
     a.click()
     URL.revokeObjectURL(url)
-  } catch { toast.error('Error', 'Action failed') }
+  } catch { toast.add({ severity: 'error', summary: 'Error', detail: 'Action failed', life: 5000 }) }
 }
 </script>
 

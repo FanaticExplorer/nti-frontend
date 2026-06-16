@@ -1,18 +1,18 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { getMyMentorships } from '@/api/mentorships'
-import { useToastStore } from '@/stores/toast'
+import { useToast } from 'primevue/usetoast'
 
 const mentorships = ref([])
 const loading = ref(true)
-const toast = useToastStore()
+const toast = useToast()
 
 onMounted(async () => {
   try {
     const { data } = await getMyMentorships()
     mentorships.value = data.items
   } catch {
-    toast.error('Error', 'Failed to load data')
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 })
   } finally {
     loading.value = false
   }

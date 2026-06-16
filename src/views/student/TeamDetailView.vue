@@ -2,13 +2,13 @@
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useConfirm } from 'primevue/useconfirm'
-import { useToastStore } from '@/stores/toast'
+import { useToast } from 'primevue/usetoast'
 import { getTeam, inviteTeamMember, removeTeamMember } from '@/api/teams'
 import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
 const auth = useAuthStore()
-const toast = useToastStore()
+const toast = useToast()
 const confirm = useConfirm()
 
 const team = ref(null)
@@ -28,7 +28,7 @@ async function fetchTeam() {
     team.value = data
     isLeader.value = data.leader_id === auth.user?.id
   } catch {
-    toast.error('Error', 'Failed to load data')
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 })
   } finally {
     loading.value = false
   }
@@ -42,7 +42,7 @@ async function handleInvite() {
     inviteEmail.value = ''
     await fetchTeam()
   } catch {
-    toast.error('Error', 'Action failed')
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Action failed', life: 5000 })
   } finally {
     inviting.value = false
   }
@@ -55,10 +55,10 @@ async function handleRemove(userId, userName) {
     accept: async () => {
       try {
         await removeTeamMember(team.value.id, userId)
-        toast.success('Member removed')
+        toast.add({ severity: 'success', summary: 'Member removed', life: 3000 })
         await fetchTeam()
       } catch (err) {
-        toast.error('Error', err?.response?.data?.detail || 'Action failed')
+        toast.add({ severity: 'error', summary: 'Error', detail: err?.response?.data?.detail || 'Action failed', life: 5000 })
       }
     }
   })

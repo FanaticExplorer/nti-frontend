@@ -3,12 +3,12 @@ import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { getCall } from '@/api/calls'
 import { useAuthStore } from '@/stores/auth'
-import { useToastStore } from '@/stores/toast'
+import { useToast } from 'primevue/usetoast'
 import StatusBadge from '@/components/StatusBadge.vue'
 
 const route = useRoute()
 const auth = useAuthStore()
-const toast = useToastStore()
+const toast = useToast()
 
 const call = ref(null)
 const loading = ref(true)
@@ -23,7 +23,7 @@ onMounted(async () => {
     const { data } = await getCall(route.params.id)
     call.value = data
   } catch {
-    toast.error('Error', 'Failed to load data')
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 })
   } finally {
     loading.value = false
   }

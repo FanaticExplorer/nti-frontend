@@ -1,10 +1,10 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { getCalls } from '@/api/calls'
-import { useToastStore } from '@/stores/toast'
+import { useToast } from 'primevue/usetoast'
 import StatusBadge from '@/components/StatusBadge.vue'
 
-const toast = useToastStore()
+const toast = useToast()
 const calls = ref([])
 const loading = ref(true)
 const filterProgram = ref(null)
@@ -31,7 +31,7 @@ async function fetchCalls() {
     const { data } = await getCalls(params)
     calls.value = data.items
   } catch {
-    toast.error('Error', 'Failed to load data')
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 })
   } finally {
     loading.value = false
   }

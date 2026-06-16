@@ -1,9 +1,9 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { getMyProfile, updateMyProfile } from '@/api/profiles'
-import { useToastStore } from '@/stores/toast'
+import { useToast } from 'primevue/usetoast'
 
-const toast = useToastStore()
+const toast = useToast()
 const profile = ref(null)
 const loading = ref(true)
 const editing = ref(false)
@@ -29,7 +29,7 @@ onMounted(async () => {
     if (err.response?.status === 404) {
       profile.value = null
     } else {
-      toast.error('Error', err?.response?.data?.detail || 'Failed to load data')
+      toast.add({ severity: 'error', summary: 'Error', detail: err?.response?.data?.detail || 'Failed to load data', life: 5000 })
     }
   } finally {
     loading.value = false
@@ -47,7 +47,7 @@ async function handleSave() {
     profile.value = data
     editing.value = false
   } catch {
-    toast.error('Error', 'Action failed')
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Action failed', life: 5000 })
   } finally {
     saving.value = false
   }

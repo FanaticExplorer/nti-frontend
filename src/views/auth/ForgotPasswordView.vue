@@ -1,9 +1,9 @@
 <script setup>
 import { ref } from 'vue'
 import { forgotPassword } from '@/api/auth'
-import { useToastStore } from '@/stores/toast'
+import { useToast } from 'primevue/usetoast'
 
-const toast = useToastStore()
+const toast = useToast()
 const email = ref('')
 const loading = ref(false)
 const sent = ref(false)
@@ -16,7 +16,7 @@ async function handleSubmit() {
   } catch (err) {
     sent.value = true
     if (err.response?.status !== 404) {
-      toast.error('Error', err.response?.data?.detail || 'Failed to send request')
+      toast.add({ severity: 'error', summary: 'Error', detail: err.response?.data?.detail || 'Failed to send request', life: 5000 })
     }
   } finally {
     loading.value = false

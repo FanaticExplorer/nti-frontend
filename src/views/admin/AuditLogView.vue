@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { getAuditLog } from '@/api/admin'
-import { useToastStore } from '@/stores/toast'
+import { useToast } from 'primevue/usetoast'
 
 const logs = ref([])
 const loading = ref(true)
@@ -10,7 +10,7 @@ const filterDateFrom = ref(null)
 const filterDateTo = ref(null)
 
 const expandedRows = ref([])
-const toast = useToastStore()
+const toast = useToast()
 
 onMounted(fetchLogs)
 
@@ -23,7 +23,7 @@ async function fetchLogs() {
     if (filterDateTo.value) params.date_to = filterDateTo.value.toISOString().split('T')[0]
     const { data } = await getAuditLog(params)
     logs.value = data.items
-  } catch { toast.error('Error', 'Failed to load data') } finally {
+  } catch { toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 }) } finally {
     loading.value = false
   }
 }

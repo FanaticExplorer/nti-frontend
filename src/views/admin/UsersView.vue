@@ -1,11 +1,11 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useToastStore } from '@/stores/toast'
+import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import { getUsers, changeUserRole, deactivateUser } from '@/api/users'
 import RoleBadge from '@/components/RoleBadge.vue'
 
-const toast = useToastStore()
+const toast = useToast()
 const confirm = useConfirm()
 
 const users = ref([])
@@ -33,7 +33,7 @@ async function fetchUsers() {
     if (filterRole.value) params.role = filterRole.value
     const { data } = await getUsers(params)
     users.value = data.items
-  } catch (err) { toast.error('Error', err?.response?.data?.detail || 'Action failed') } finally {
+  } catch (err) { toast.add({ severity: 'error', summary: 'Error', detail: err?.response?.data?.detail || 'Action failed', life: 5000 }) } finally {
     loading.value = false
   }
 }
@@ -41,9 +41,9 @@ async function fetchUsers() {
 async function handleRoleChange(user, newRole) {
   try {
     await changeUserRole(user.id, { role: newRole })
-    toast.success('Role updated', `${user.full_name} is now ${newRole}`, 3000)
+    toast.add({ severity: 'success', summary: 'Role updated', detail: `${user.full_name} is now ${newRole}`, life: 3000 })
     await fetchUsers()
-  } catch (err) { toast.error('Error', err?.response?.data?.detail || 'Action failed') }
+  } catch (err) { toast.add({ severity: 'error', summary: 'Error', detail: err?.response?.data?.detail || 'Action failed', life: 5000 }) }
 }
 
 async function handleDeactivate(user) {
@@ -53,9 +53,9 @@ async function handleDeactivate(user) {
     accept: async () => {
       try {
         await deactivateUser(user.id)
-        toast.success('User deactivated', '', 3000)
+        toast.add({ severity: 'success', summary: 'User deactivated', detail: '', life: 3000 })
         await fetchUsers()
-      } catch (err) { toast.error('Error', err?.response?.data?.detail || 'Action failed') }
+      } catch (err) { toast.add({ severity: 'error', summary: 'Error', detail: err?.response?.data?.detail || 'Action failed', life: 5000 }) }
     }
   })
 }

@@ -1,19 +1,19 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { getAllApplications } from '@/api/applications'
-import { useToastStore } from '@/stores/toast'
+import { useToast } from 'primevue/usetoast'
 import StatusBadge from '@/components/StatusBadge.vue'
 
 const applications = ref([])
 const loading = ref(true)
-const toast = useToastStore()
+const toast = useToast()
 
 onMounted(async () => {
   try {
     const { data } = await getAllApplications({ status: 'under_evaluation' })
     applications.value = data.items
   } catch {
-    toast.error('Error', 'Failed to load data')
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 })
   } finally {
     loading.value = false
   }

@@ -1,10 +1,10 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useToastStore } from '@/stores/toast'
+import { useToast } from 'primevue/usetoast'
 import { getOrganizations, updateOrganization, addOrganizationMember } from '@/api/organizations'
 import StatusBadge from '@/components/StatusBadge.vue'
 
-const toast = useToastStore()
+const toast = useToast()
 const org = ref(null)
 const loading = ref(true)
 const editing = ref(false)
@@ -23,7 +23,7 @@ onMounted(async () => {
       form.value = { ...org.value }
     }
   } catch {
-    toast.error('Error', 'Failed to load data')
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 })
   } finally {
     loading.value = false
   }
@@ -35,9 +35,9 @@ async function handleSave() {
     const { data } = await updateOrganization(org.value.id, form.value)
     org.value = data
     editing.value = false
-    toast.success('Organization updated')
+    toast.add({ severity: 'success', summary: 'Organization updated', life: 3000 })
   } catch (err) {
-    toast.error('Error', err.response?.data?.detail || 'Action failed')
+    toast.add({ severity: 'error', summary: 'Error', detail: err.response?.data?.detail || 'Action failed', life: 5000 })
   } finally {
     saving.value = false
   }
@@ -53,7 +53,7 @@ async function handleAddMember() {
     const { data } = await getOrganizations()
     org.value = data.items?.[0] || null
   } catch {
-    toast.error('Error', 'Action failed')
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Action failed', life: 5000 })
   } finally {
     addingMember.value = false
   }

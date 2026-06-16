@@ -7,7 +7,7 @@ import { getUsers } from '@/api/users'
 import { createMentorship } from '@/api/mentorships'
 import { getMilestones, createMilestone } from '@/api/milestones'
 import { getEvaluations } from '@/api/evaluations'
-import { useToastStore } from '@/stores/toast'
+import { useToast } from 'primevue/usetoast'
 import StatusBadge from '@/components/StatusBadge.vue'
 
 const route = useRoute()
@@ -40,7 +40,7 @@ const statusTransitions = {
 }
 
 const requiresComment = ['revision_requested', 'rejected']
-const toast = useToastStore()
+const toast = useToast()
 
 onMounted(fetchData)
 
@@ -66,8 +66,8 @@ async function fetchData() {
       ])
       evaluations.value = evRes.data.items || evRes.data
       milestones.value = milRes.data.items || milRes.data
-    } catch { toast.error('Error', 'Failed to load data') }
-  } catch { toast.error('Error', 'Failed to load data') } finally {
+    } catch { toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 }) }
+  } catch { toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 }) } finally {
     loading.value = false
   }
 }
@@ -83,7 +83,7 @@ async function handleStatusChange() {
     newStatus.value = null
     comment.value = ''
     await fetchData()
-  } catch { toast.error('Error', 'Action failed') } finally {
+  } catch { toast.add({ severity: 'error', summary: 'Error', detail: 'Action failed', life: 5000 }) } finally {
     saving.value = false
   }
 }
@@ -98,7 +98,7 @@ async function handleAssignMentor() {
     })
     selectedMentor.value = null
     await fetchData()
-  } catch { toast.error('Error', 'Action failed') } finally {
+  } catch { toast.add({ severity: 'error', summary: 'Error', detail: 'Action failed', life: 5000 }) } finally {
     saving.value = false
   }
 }
@@ -113,7 +113,7 @@ async function handleAddMilestone() {
     })
     newMilestone.value = { title: '', due_date: null }
     await fetchData()
-  } catch { toast.error('Error', 'Action failed') } finally {
+  } catch { toast.add({ severity: 'error', summary: 'Error', detail: 'Action failed', life: 5000 }) } finally {
     saving.value = false
   }
 }

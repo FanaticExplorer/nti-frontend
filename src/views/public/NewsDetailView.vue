@@ -2,10 +2,10 @@
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { getNewsArticle } from '@/api/content'
-import { useToastStore } from '@/stores/toast'
+import { useToast } from 'primevue/usetoast'
 
 const route = useRoute()
-const toast = useToastStore()
+const toast = useToast()
 const article = ref(null)
 const loading = ref(true)
 
@@ -14,7 +14,7 @@ onMounted(async () => {
     const { data } = await getNewsArticle(route.params.slug)
     article.value = data
   } catch {
-    toast.error('Error', 'Failed to load data')
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 })
   } finally {
     loading.value = false
   }

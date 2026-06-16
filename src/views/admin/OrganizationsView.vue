@@ -1,10 +1,10 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useToastStore } from '@/stores/toast'
+import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import { getOrganizations, approveOrganization } from '@/api/organizations'
 
-const toast = useToastStore()
+const toast = useToast()
 const confirm = useConfirm()
 const orgs = ref([])
 const loading = ref(true)
@@ -16,7 +16,7 @@ async function fetchOrgs() {
   try {
     const { data } = await getOrganizations()
     orgs.value = data.items
-  } catch { toast.error('Error', 'Failed to load data') } finally {
+  } catch { toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 }) } finally {
     loading.value = false
   }
 }
@@ -28,9 +28,9 @@ async function handleApprove(org) {
     accept: async () => {
       try {
         await approveOrganization(org.id)
-        toast.success('Organization approved', '', 3000)
+        toast.add({ severity: 'success', summary: 'Organization approved', detail: '', life: 3000 })
         await fetchOrgs()
-      } catch (err) { toast.error('Error', err?.response?.data?.detail || 'Action failed') }
+      } catch (err) { toast.add({ severity: 'error', summary: 'Error', detail: err?.response?.data?.detail || 'Action failed', life: 5000 }) }
     }
   })
 }

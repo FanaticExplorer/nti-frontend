@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { getPages, createPage, updatePage } from '@/api/content'
-import { useToastStore } from '@/stores/toast'
+import { useToast } from 'primevue/usetoast'
 
 const pages = ref([])
 const loading = ref(true)
@@ -9,7 +9,7 @@ const showDialog = ref(false)
 const editItem = ref(null)
 const saving = ref(false)
 const form = ref({ title: '', slug: '', body: '', meta_title: '', meta_description: '', is_published: false })
-const toast = useToastStore()
+const toast = useToast()
 
 onMounted(fetchPages)
 
@@ -18,7 +18,7 @@ async function fetchPages() {
   try {
     const { data } = await getPages()
     pages.value = data.items
-  } catch { toast.error('Error', 'Failed to load data') } finally {
+  } catch { toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 }) } finally {
     loading.value = false
   }
 }
@@ -45,7 +45,7 @@ async function handleSave() {
     }
     showDialog.value = false
     await fetchPages()
-  } catch { toast.error('Error', 'Action failed') } finally {
+  } catch { toast.add({ severity: 'error', summary: 'Error', detail: 'Action failed', life: 5000 }) } finally {
     saving.value = false
   }
 }

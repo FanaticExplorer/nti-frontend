@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { getCalls, createCall, updateCall, changeCallStatus } from '@/api/calls'
-import { useToastStore } from '@/stores/toast'
+import { useToast } from 'primevue/usetoast'
 import StatusBadge from '@/components/StatusBadge.vue'
 
 const calls = ref([])
@@ -10,7 +10,7 @@ const showCreate = ref(false)
 const showEdit = ref(false)
 const saving = ref(false)
 const editCall = ref(null)
-const toast = useToastStore()
+const toast = useToast()
 
 const form = ref({
   title: '',
@@ -35,7 +35,7 @@ async function fetchCalls() {
     const { data } = await getCalls()
     calls.value = data.items
   } catch {
-    toast.error('Error', 'Failed to load data')
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 })
   } finally {
     loading.value = false
   }
@@ -53,7 +53,7 @@ async function handleCreate() {
     showCreate.value = false
     await fetchCalls()
   } catch {
-    toast.error('Error', 'Action failed')
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Action failed', life: 5000 })
   } finally {
     saving.value = false
   }
@@ -72,7 +72,7 @@ async function handleEdit() {
     showEdit.value = false
     await fetchCalls()
   } catch {
-    toast.error('Error', 'Action failed')
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Action failed', life: 5000 })
   } finally {
     saving.value = false
   }
@@ -83,7 +83,7 @@ async function handleStatusChange(call, newStatus) {
     await changeCallStatus(call.id, { status: newStatus })
     await fetchCalls()
   } catch {
-    toast.error('Error', 'Action failed')
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Action failed', life: 5000 })
   }
 }
 </script>

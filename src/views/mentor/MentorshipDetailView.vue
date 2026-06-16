@@ -3,11 +3,11 @@ import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { getMentorship, getMentorshipLogs, addMentorshipLog } from '@/api/mentorships'
 import { getMilestones, updateMilestoneStatus } from '@/api/milestones'
-import { useToastStore } from '@/stores/toast'
+import { useToast } from 'primevue/usetoast'
 import StatusBadge from '@/components/StatusBadge.vue'
 
 const route = useRoute()
-const toast = useToastStore()
+const toast = useToast()
 const mentorship = ref(null)
 const milestones = ref([])
 const logs = ref([])
@@ -30,7 +30,7 @@ async function fetchData() {
       milestones.value = data.items || data
     }
   } catch {
-    toast.error('Error', 'Failed to load data')
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 })
   } finally {
     loading.value = false
   }
@@ -44,7 +44,7 @@ async function handleAddLog() {
     logText.value = ''
     await fetchData()
   } catch {
-    toast.error('Error', 'Action failed')
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Action failed', life: 5000 })
   } finally {
     logging.value = false
   }
@@ -55,7 +55,7 @@ async function handleMilestoneStatus(milestone, newStatus) {
     await updateMilestoneStatus(milestone.id, { status: newStatus })
     await fetchData()
   } catch {
-    toast.error('Error', 'Action failed')
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Action failed', life: 5000 })
   }
 }
 </script>

@@ -1,14 +1,14 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useToastStore } from '@/stores/toast'
+import { useToast } from 'primevue/usetoast'
 import { getCalls } from '@/api/calls'
 import { getMyTeams } from '@/api/teams'
 import { createApplication } from '@/api/applications'
 
 const route = useRoute()
 const router = useRouter()
-const toast = useToastStore()
+const toast = useToast()
 
 const step = ref(1)
 const calls = ref([])
@@ -39,7 +39,7 @@ onMounted(async () => {
       selectedCall.value = calls.value.find((c) => c.id.toString() === callId.toString()) || null
     }
   } catch {
-    toast.error('Error', 'Failed to load data')
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 })
   } finally {
     loading.value = false
   }
@@ -55,9 +55,9 @@ async function handleSave() {
       is_draft: true
     })
     router.push(`/student/applications/${data.id}`)
-    toast.success('Application saved as draft')
+    toast.add({ severity: 'success', summary: 'Application saved as draft', life: 3000 })
   } catch (err) {
-    toast.error('Error', err?.response?.data?.detail || 'Action failed')
+    toast.add({ severity: 'error', summary: 'Error', detail: err?.response?.data?.detail || 'Action failed', life: 5000 })
   } finally {
     saving.value = false
   }

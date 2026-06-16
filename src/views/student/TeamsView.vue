@@ -1,9 +1,9 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { getMyTeams, createTeam } from '@/api/teams'
-import { useToastStore } from '@/stores/toast'
+import { useToast } from 'primevue/usetoast'
 
-const toast = useToastStore()
+const toast = useToast()
 const teams = ref([])
 const loading = ref(true)
 const showCreate = ref(false)
@@ -20,7 +20,7 @@ onMounted(async () => {
     const { data } = await getMyTeams()
     teams.value = data.items
   } catch {
-    toast.error('Error', 'Failed to load data')
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 })
   } finally {
     loading.value = false
   }
@@ -35,7 +35,7 @@ async function handleCreate() {
     const { data } = await getMyTeams()
     teams.value = data.items
   } catch {
-    toast.error('Error', 'Action failed')
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Action failed', life: 5000 })
   } finally {
     creating.value = false
   }

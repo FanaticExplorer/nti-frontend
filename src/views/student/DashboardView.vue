@@ -2,10 +2,10 @@
 import { ref, onMounted } from 'vue'
 import { getMyApplications } from '@/api/applications'
 import { getMyTeams } from '@/api/teams'
-import { useToastStore } from '@/stores/toast'
+import { useToast } from 'primevue/usetoast'
 import StatusBadge from '@/components/StatusBadge.vue'
 
-const toast = useToastStore()
+const toast = useToast()
 const applications = ref([])
 const teams = ref([])
 const loading = ref(true)
@@ -29,7 +29,7 @@ onMounted(async () => {
     submittedCount.value = applications.value.filter((a) => a.status === 'submitted').length
     approvedCount.value = applications.value.filter((a) => a.status === 'approved').length
   } catch {
-    toast.error('Error', 'Failed to load data')
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 })
   } finally {
     loading.value = false
   }

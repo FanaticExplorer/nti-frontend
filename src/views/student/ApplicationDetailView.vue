@@ -1,13 +1,13 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { useToastStore } from '@/stores/toast'
+import { useToast } from 'primevue/usetoast'
 import { getApplication, submitApplication, getApplicationHistory, updateApplication } from '@/api/applications'
 import { uploadDocument, getDocument } from '@/api/documents'
 import StatusBadge from '@/components/StatusBadge.vue'
 
 const route = useRoute()
-const toast = useToastStore()
+const toast = useToast()
 const app = ref(null)
 const history = ref([])
 const loading = ref(true)
@@ -32,7 +32,7 @@ async function fetchData() {
       history.value = histRes.data.items || histRes.data
     } catch { /* ok if history fails */ }
   } catch {
-    toast.error('Error', 'Failed to load data')
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 })
   } finally {
     loading.value = false
   }
@@ -42,10 +42,10 @@ async function handleSubmit() {
   submitting.value = true
   try {
     await submitApplication(app.value.id)
-    toast.success('Application submitted')
+    toast.add({ severity: 'success', summary: 'Application submitted', life: 3000 })
     await fetchData()
   } catch (err) {
-    toast.error('Error', err?.response?.data?.detail || 'Action failed')
+    toast.add({ severity: 'error', summary: 'Error', detail: err?.response?.data?.detail || 'Action failed', life: 5000 })
   } finally {
     submitting.value = false
   }
@@ -55,11 +55,11 @@ async function handleSave() {
   submitting.value = true
   try {
     await updateApplication(app.value.id, { form_data: formData.value })
-    toast.success('Changes saved')
+    toast.add({ severity: 'success', summary: 'Changes saved', life: 3000 })
     editing.value = false
     await fetchData()
   } catch (err) {
-    toast.error('Error', err?.response?.data?.detail || 'Action failed')
+    toast.add({ severity: 'error', summary: 'Error', detail: err?.response?.data?.detail || 'Action failed', life: 5000 })
   } finally {
     submitting.value = false
   }
@@ -76,7 +76,7 @@ async function handleUpload(event) {
     await uploadDocument(fd)
     await fetchData()
   } catch {
-    toast.error('Error', 'Action failed')
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Action failed', life: 5000 })
   } finally {
     uploading.value = false
   }

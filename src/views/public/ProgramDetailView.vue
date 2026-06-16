@@ -3,10 +3,10 @@ import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { getProgram } from '@/api/programs'
 import { getCalls } from '@/api/calls'
-import { useToastStore } from '@/stores/toast'
+import { useToast } from 'primevue/usetoast'
 
 const route = useRoute()
-const toast = useToastStore()
+const toast = useToast()
 const program = ref(null)
 const calls = ref([])
 const loading = ref(true)
@@ -20,7 +20,7 @@ onMounted(async () => {
     program.value = progRes.data
     calls.value = callsRes.data.items
   } catch {
-    toast.error('Error', 'Failed to load data')
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 })
   } finally {
     loading.value = false
   }

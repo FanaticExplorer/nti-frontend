@@ -1,13 +1,13 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { getAllApplications } from '@/api/applications'
-import { useToastStore } from '@/stores/toast'
+import { useToast } from 'primevue/usetoast'
 import StatusBadge from '@/components/StatusBadge.vue'
 
 const applications = ref([])
 const loading = ref(true)
 const filterStatus = ref(null)
-const toast = useToastStore()
+const toast = useToast()
 
 const statusOptions = [
   { label: 'All', value: null },
@@ -27,7 +27,7 @@ async function fetchData() {
     if (filterStatus.value) params.status = filterStatus.value
     const { data } = await getAllApplications(params)
     applications.value = data.items
-  } catch { toast.error('Error', 'Failed to load data') } finally {
+  } catch { toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 }) } finally {
     loading.value = false
   }
 }

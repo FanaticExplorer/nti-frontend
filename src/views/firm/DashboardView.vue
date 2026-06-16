@@ -3,11 +3,11 @@ import { ref, onMounted } from 'vue'
 import { getCalls } from '@/api/calls'
 import { getOrganizations } from '@/api/organizations'
 import { useAuthStore } from '@/stores/auth'
-import { useToastStore } from '@/stores/toast'
+import { useToast } from 'primevue/usetoast'
 import StatusBadge from '@/components/StatusBadge.vue'
 
 const auth = useAuthStore()
-const toast = useToastStore()
+const toast = useToast()
 const calls = ref([])
 const org = ref(null)
 const loading = ref(true)
@@ -21,7 +21,7 @@ onMounted(async () => {
     org.value = orgsRes.data.items?.[0] || null
     calls.value = callsRes.data.items.filter((c) => c.organization_id === org.value?.id)
   } catch {
-    toast.error('Error', 'Failed to load data')
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 })
   } finally {
     loading.value = false
   }
