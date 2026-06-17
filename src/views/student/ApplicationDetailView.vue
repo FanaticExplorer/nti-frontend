@@ -77,8 +77,7 @@ async function handleUpload(event) {
   try {
     const fd = new FormData()
     fd.append('file', file)
-    fd.append('application_id', app.value.id)
-    await uploadDocument(fd)
+    await uploadDocument(app.value.id, fd)
     await fetchData()
   } catch (err) {
     if (err?.code === "ERR_CANCELED") return

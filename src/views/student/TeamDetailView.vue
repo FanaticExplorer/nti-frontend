@@ -41,7 +41,7 @@ async function handleInvite() {
   if (!inviteEmail.value) return
   inviting.value = true
   try {
-    await inviteTeamMember(team.value.id, { email: inviteEmail.value })
+    await inviteTeamMember(team.value.id, inviteEmail.value)
     inviteEmail.value = ''
     await fetchTeam()
   } catch (err) {
