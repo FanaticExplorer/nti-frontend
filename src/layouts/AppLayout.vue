@@ -2,6 +2,7 @@
 import { useAuthStore } from '@/stores/auth'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import NotificationBell from '@/components/NotificationBell.vue'
 
 const auth = useAuthStore()
 const route = useRoute()
@@ -91,6 +92,7 @@ const sidebarLinks = computed(() => {
       <header class="surface-section border-bottom-1 surface-border px-4 py-3 flex align-items-center justify-content-between">
         <h2 class="text-lg m-0">{{ route.meta?.title || '' }}</h2>
         <div class="flex align-items-center gap-3">
+          <NotificationBell />
           <span class="text-color-secondary">{{ user?.full_name }}</span>
           <Button label="Logout" severity="secondary" variant="text" size="small" @click="auth.logout()" />
         </div>
