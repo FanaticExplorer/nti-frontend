@@ -4,7 +4,7 @@ import { useAbortController } from '@/composables/useAbortController'
 import { useRoute } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { getApplication, submitApplication, getApplicationHistory, updateApplication, getApplicationComments } from '@/api/applications'
-import { uploadDocument, getDocument } from '@/api/documents'
+import { uploadDocument, getDocument, deleteDocument } from '@/api/documents'
 import StatusBadge from '@/components/StatusBadge.vue'
 
 const route = useRoute()
@@ -104,6 +104,16 @@ function downloadDocument(docId) {
     URL.revokeObjectURL(url)
   })
 }
+
+async function handleDeleteDocument(docId) {
+  try {
+    await deleteDocument(docId)
+    await fetchData()
+  } catch (err) {
+    if (err?.code === "ERR_CANCELED") return
+    toast.add({ severity: 'error', summary: 'Error', detail: err?.response?.data?.detail || 'Action failed', life: 5000 })
+  }
+}
 </script>
 
 <template>
@@ -172,7 +182,10 @@ function downloadDocument(docId) {
               <Tag v-if="doc.document_type" :value="doc.document_type" severity="info" />
               <Tag v-if="doc.classification && doc.classification !== 'internal'" :value="doc.classification" severity="secondary" />
             </div>
-            <Button icon="pi pi-download" text size="small" @click="downloadDocument(doc.id)" />
+            <div class="flex align-items-center gap-1">
+              <Button icon="pi pi-download" text size="small" @click="downloadDocument(doc.id)" />
+              <Button v-if="app.status === 'draft'" icon="pi pi-trash" text severity="danger" size="small" @click="handleDeleteDocument(doc.id)" />
+            </div>
           </div>
         </div>
         <div v-else class="text-color-secondary mb-3">No documents uploaded.</div>

@@ -3,7 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useAbortController } from '@/composables/useAbortController'
 import { useRoute } from 'vue-router'
 import { getApplication, changeApplicationStatus, getApplicationHistory, getApplicationComments, addApplicationComment } from '@/api/applications'
-import { getDocument } from '@/api/documents'
+import { getDocument, deleteDocument } from '@/api/documents'
 import { getUsers } from '@/api/users'
 import { createMentorship } from '@/api/mentorships'
 import { getMilestones, createMilestone } from '@/api/milestones'
@@ -142,6 +142,16 @@ function downloadDocument(docId) {
     a.click()
     URL.revokeObjectURL(url)
   })
+}
+
+async function handleDeleteDocument(docId) {
+  try {
+    await deleteDocument(docId)
+    await fetchData()
+  } catch (err) {
+    if (err?.code === "ERR_CANCELED") return
+    toast.add({ severity: 'error', summary: 'Error', detail: err?.response?.data?.detail || 'Action failed', life: 5000 })
+  }
 }
 
 async function handleCreateEvaluation() {
@@ -290,7 +300,10 @@ const availableTransitions = computed(() => {
               <Tag v-if="doc.document_type" :value="doc.document_type" severity="info" />
               <Tag v-if="doc.classification" :value="doc.classification" :severity="doc.classification === 'confidential' ? 'danger' : doc.classification === 'internal' ? 'warn' : 'secondary'" />
             </div>
-            <Button icon="pi pi-download" text size="small" @click="downloadDocument(doc.id)" />
+            <div class="flex align-items-center gap-1">
+              <Button icon="pi pi-download" text size="small" @click="downloadDocument(doc.id)" />
+              <Button icon="pi pi-trash" text severity="danger" size="small" @click="handleDeleteDocument(doc.id)" />
+            </div>
           </div>
         </div>
         <div v-else class="text-color-secondary">No documents.</div>

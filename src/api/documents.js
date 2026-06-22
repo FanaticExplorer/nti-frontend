@@ -7,3 +7,4 @@ export const uploadDocument = (applicationId, formData) => {
     headers: { 'Content-Type': 'multipart/form-data' }
   })
 }
+export const deleteDocument = (id) => api.delete(`/documents/${id}`)
