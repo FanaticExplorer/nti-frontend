@@ -42,6 +42,7 @@ onMounted(async () => {
       <div class="surface-card p-4 border-round shadow-1 mb-4">
         <div class="flex align-items-center gap-2 mb-3">
           <Tag :value="program.type" severity="info" />
+          <Tag v-for="cat in program.categories" :key="cat" :value="cat" severity="secondary" />
           <h1 class="m-0 text-2xl">{{ program.title }}</h1>
         </div>
         <p class="text-color-secondary">{{ program.description }}</p>

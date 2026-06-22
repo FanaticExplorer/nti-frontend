@@ -243,7 +243,11 @@ const availableTransitions = computed(() => {
         <h3 class="text-lg mb-3">Documents</h3>
         <div v-if="app.documents?.length">
           <div v-for="doc in app.documents" :key="doc.id" class="flex align-items-center justify-content-between p-2 border-bottom-1 surface-border">
-            <span>{{ doc.filename || doc.id }}</span>
+            <div class="flex align-items-center gap-2">
+              <span>{{ doc.filename || doc.id }}</span>
+              <Tag v-if="doc.document_type" :value="doc.document_type" severity="info" />
+              <Tag v-if="doc.classification" :value="doc.classification" :severity="doc.classification === 'confidential' ? 'danger' : doc.classification === 'internal' ? 'warn' : 'secondary'" />
+            </div>
             <Button icon="pi pi-download" text size="small" @click="downloadDocument(doc.id)" />
           </div>
         </div>
