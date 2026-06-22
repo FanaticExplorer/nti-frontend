@@ -7,11 +7,13 @@ import { getDocument } from '@/api/documents'
 import { getUsers } from '@/api/users'
 import { createMentorship } from '@/api/mentorships'
 import { getMilestones, createMilestone } from '@/api/milestones'
-import { getEvaluations } from '@/api/evaluations'
+import { getEvaluations, createEvaluation, updateEvaluation } from '@/api/evaluations'
 import { useToast } from 'primevue/usetoast'
+import { useAuthStore } from '@/stores/auth'
 import StatusBadge from '@/components/StatusBadge.vue'
 
 const route = useRoute()
+const auth = useAuthStore()
 const app = ref(null)
 const history = ref([])
 const evaluations = ref([])
@@ -29,6 +31,10 @@ const comments = ref([])
 const newCommentBody = ref('')
 const newCommentInternal = ref(false)
 const addingComment = ref(false)
+
+const evalForm = ref({ score: 0, recommendation: 'approve', comment: '', internal_notes: '' })
+const editingEvalId = ref(null)
+const savingEval = ref(false)
 
 const statusTransitions = {
   draft: ['submitted'],
@@ -136,6 +142,42 @@ function downloadDocument(docId) {
     a.click()
     URL.revokeObjectURL(url)
   })
+}
+
+async function handleCreateEvaluation() {
+  savingEval.value = true
+  try {
+    await createEvaluation({ application_id: app.value.id, ...evalForm.value })
+    evalForm.value = { score: 0, recommendation: 'approve', comment: '', internal_notes: '' }
+    const { data } = await getEvaluations(app.value.id, { signal })
+    evaluations.value = data.items || data
+  } catch (err) {
+    if (err?.code === "ERR_CANCELED") return
+    toast.add({ severity: 'error', summary: 'Error', detail: err?.response?.data?.detail || 'Action failed', life: 5000 })
+  } finally {
+    savingEval.value = false
+  }
+}
+
+function startEditEval(ev) {
+  editingEvalId.value = ev.id
+  evalForm.value = { score: ev.score, recommendation: ev.recommendation, comment: ev.comment || '', internal_notes: ev.internal_notes || '' }
+}
+
+async function handleUpdateEvaluation() {
+  savingEval.value = true
+  try {
+    await updateEvaluation(editingEvalId.value, evalForm.value)
+    editingEvalId.value = null
+    evalForm.value = { score: 0, recommendation: 'approve', comment: '', internal_notes: '' }
+    const { data } = await getEvaluations(app.value.id, { signal })
+    evaluations.value = data.items || data
+  } catch (err) {
+    if (err?.code === "ERR_CANCELED") return
+    toast.add({ severity: 'error', summary: 'Error', detail: err?.response?.data?.detail || 'Action failed', life: 5000 })
+  } finally {
+    savingEval.value = false
+  }
 }
 
 async function handleAddComment() {
@@ -262,11 +304,64 @@ const availableTransitions = computed(() => {
               <span class="font-bold">{{ ev.evaluator?.full_name }}</span>
               <Tag :value="`Score: ${ev.score}`" severity="info" />
               <Tag :value="ev.recommendation" severity="warn" />
+              <Button
+                v-if="ev.evaluator_id === auth.user?.id && editingEvalId !== ev.id"
+                icon="pi pi-pencil"
+                text
+                size="small"
+                @click="startEditEval(ev)"
+              />
             </div>
             <p v-if="ev.comment" class="text-sm text-color-secondary m-0">{{ ev.comment }}</p>
           </div>
         </div>
-        <div v-else class="text-color-secondary">No evaluations yet.</div>
+        <div v-else class="text-color-secondary mb-3">No evaluations yet.</div>
+
+        <div v-if="['evaluator', 'nti_admin', 'super_admin'].includes(auth.userRole)" class="pt-3 border-top-1 surface-border">
+          <h4 class="text-base mb-2">{{ editingEvalId ? 'Edit Evaluation' : 'Add Evaluation' }}</h4>
+          <div class="flex flex-column gap-2">
+            <div class="flex gap-2">
+              <div class="flex flex-column gap-1">
+                <label class="text-sm">Score (1-10)</label>
+                <InputNumber v-model="evalForm.score" :min="1" :max="10" style="width: 100px" />
+              </div>
+              <div class="flex flex-column gap-1">
+                <label class="text-sm">Recommendation</label>
+                <Dropdown v-model="evalForm.recommendation" :options="['approve', 'revision', 'reject']" style="width: 130px" />
+              </div>
+            </div>
+            <div class="flex flex-column gap-1">
+              <label class="text-sm">Comment</label>
+              <Textarea v-model="evalForm.comment" rows="2" />
+            </div>
+            <div class="flex flex-column gap-1">
+              <label class="text-sm">Internal Notes</label>
+              <InputText v-model="evalForm.internal_notes" />
+            </div>
+            <div class="flex gap-2">
+              <Button
+                v-if="editingEvalId"
+                label="Update"
+                icon="pi pi-check"
+                :loading="savingEval"
+                @click="handleUpdateEvaluation"
+              />
+              <Button
+                v-else
+                label="Submit"
+                icon="pi pi-send"
+                :loading="savingEval"
+                @click="handleCreateEvaluation"
+              />
+              <Button
+                v-if="editingEvalId"
+                label="Cancel"
+                severity="secondary"
+                @click="editingEvalId = null"
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="surface-card p-4 border-round shadow-1 mb-4">
