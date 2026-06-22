@@ -27,7 +27,8 @@ const sidebarLinks = computed(() => {
     firm: [
       { label: 'Dashboard', icon: 'pi pi-home', to: '/firm/dashboard' },
       { label: 'My Organization', icon: 'pi pi-building', to: '/firm/organization' },
-      { label: 'Our Calls', icon: 'pi pi-megaphone', to: '/firm/calls' }
+      { label: 'Our Calls', icon: 'pi pi-megaphone', to: '/firm/calls' },
+      { label: 'Tech Specs', icon: 'pi pi-cog', to: '/firm/tech-specs' }
     ],
     mentor: [
       { label: 'Dashboard', icon: 'pi pi-home', to: '/mentor/dashboard' },

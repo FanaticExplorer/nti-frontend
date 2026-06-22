@@ -30,6 +30,7 @@ import StudentNewApplication from '@/views/student/NewApplicationView.vue'
 import FirmDashboard from '@/views/firm/DashboardView.vue'
 import FirmOrganization from '@/views/firm/OrganizationView.vue'
 import FirmCalls from '@/views/firm/CallsView.vue'
+import FirmTechSpecs from '@/views/firm/TechSpecsView.vue'
 
 import MentorDashboard from '@/views/mentor/DashboardView.vue'
 import MentorMentorships from '@/views/mentor/MentorshipsView.vue'
@@ -112,7 +113,8 @@ const routes = [
     children: [
       { path: 'dashboard', name: 'firm-dashboard', component: FirmDashboard },
       { path: 'organization', name: 'firm-organization', component: FirmOrganization },
-      { path: 'calls', name: 'firm-calls', component: FirmCalls }
+      { path: 'calls', name: 'firm-calls', component: FirmCalls },
+      { path: 'tech-specs', name: 'firm-tech-specs', component: FirmTechSpecs }
     ]
   },
   {
