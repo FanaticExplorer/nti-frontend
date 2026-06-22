@@ -2,7 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAbortController } from '@/composables/useAbortController'
 import { useRoute } from 'vue-router'
-import { getApplication, changeApplicationStatus, getApplicationHistory } from '@/api/applications'
+import { getApplication, changeApplicationStatus, getApplicationHistory, getApplicationComments, addApplicationComment } from '@/api/applications'
 import { getDocument } from '@/api/documents'
 import { getUsers } from '@/api/users'
 import { createMentorship } from '@/api/mentorships'
@@ -24,6 +24,11 @@ const newStatus = ref(null)
 const comment = ref('')
 const selectedMentor = ref(null)
 const newMilestone = ref({ title: '', due_date: null })
+
+const comments = ref([])
+const newCommentBody = ref('')
+const newCommentInternal = ref(false)
+const addingComment = ref(false)
 
 const statusTransitions = {
   draft: ['submitted'],
@@ -62,12 +67,14 @@ async function fetchData() {
     } catch { /* ok if user fetch fails */ }
 
     try {
-      const [evRes, milRes] = await Promise.all([
+      const [evRes, milRes, commRes] = await Promise.all([
         getEvaluations(app.value.id),
-        getMilestones(app.value.id, { signal })
+        getMilestones(app.value.id, { signal }),
+        getApplicationComments(app.value.id, { signal })
       ])
       evaluations.value = evRes.data.items || evRes.data
       milestones.value = milRes.data.items || milRes.data
+      comments.value = commRes.data.items || commRes.data
     } catch { toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 }) }
   } catch { toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 }) } finally {
     loading.value = false
@@ -129,6 +136,26 @@ function downloadDocument(docId) {
     a.click()
     URL.revokeObjectURL(url)
   })
+}
+
+async function handleAddComment() {
+  if (!newCommentBody.value) return
+  addingComment.value = true
+  try {
+    await addApplicationComment(app.value.id, {
+      body: newCommentBody.value,
+      is_internal: newCommentInternal.value
+    })
+    newCommentBody.value = ''
+    newCommentInternal.value = false
+    const { data } = await getApplicationComments(app.value.id, { signal })
+    comments.value = data.items || data
+  } catch (err) {
+    if (err?.code === "ERR_CANCELED") return
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Action failed', life: 5000 })
+  } finally {
+    addingComment.value = false
+  }
 }
 
 const availableTransitions = computed(() => {
@@ -246,6 +273,31 @@ const availableTransitions = computed(() => {
             <Dropdown v-model="selectedMentor" :options="mentors" optionLabel="full_name" optionValue="id" placeholder="Select mentor" class="w-full" />
           </div>
           <Button label="Assign" :loading="saving" :disabled="!selectedMentor" @click="handleAssignMentor" />
+        </div>
+      </div>
+
+      <div class="surface-card p-4 border-round shadow-1 mb-4">
+        <h3 class="text-lg mb-3">Comments</h3>
+        <div v-if="comments.length" class="mb-3">
+          <div v-for="c in comments" :key="c.id" class="p-2 border-bottom-1 surface-border">
+            <div class="flex align-items-center gap-2 mb-1">
+              <span class="font-bold">{{ c.user_name }}</span>
+              <Tag v-if="c.is_internal" value="Internal" severity="warn" />
+              <small class="text-color-secondary">{{ new Date(c.created_at).toLocaleString() }}</small>
+            </div>
+            <p class="text-sm m-0">{{ c.body }}</p>
+          </div>
+        </div>
+        <div v-else class="text-color-secondary mb-3">No comments yet.</div>
+        <div class="flex flex-column gap-2">
+          <Textarea v-model="newCommentBody" placeholder="Add a comment..." rows="2" />
+          <div class="flex align-items-center justify-content-between">
+            <div class="flex align-items-center gap-2">
+              <Checkbox v-model="newCommentInternal" :binary="true" inputId="internal" />
+              <label for="internal">Internal (not visible to student)</label>
+            </div>
+            <Button label="Add Comment" icon="pi pi-send" :loading="addingComment" :disabled="!newCommentBody" @click="handleAddComment" />
+          </div>
         </div>
       </div>
 

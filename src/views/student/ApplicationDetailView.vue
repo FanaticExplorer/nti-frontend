@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useAbortController } from '@/composables/useAbortController'
 import { useRoute } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
-import { getApplication, submitApplication, getApplicationHistory, updateApplication } from '@/api/applications'
+import { getApplication, submitApplication, getApplicationHistory, updateApplication, getApplicationComments } from '@/api/applications'
 import { uploadDocument, getDocument } from '@/api/documents'
 import StatusBadge from '@/components/StatusBadge.vue'
 
@@ -16,6 +16,8 @@ const loading = ref(true)
 const submitting = ref(false)
 const uploading = ref(false)
 const editing = ref(false)
+
+const comments = ref([])
 
 const formData = ref({})
 
@@ -33,6 +35,11 @@ async function fetchData() {
       const histRes = await getApplicationHistory(route.params.id, { signal })
       history.value = histRes.data.items || histRes.data
     } catch { /* ok if history fails */ }
+
+    try {
+      const commRes = await getApplicationComments(route.params.id, { signal })
+      comments.value = commRes.data.items || commRes.data
+    } catch { /* ok if comments fail */ }
   } catch (err) {
     if (err?.code === "ERR_CANCELED") return
     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 })
@@ -171,7 +178,7 @@ function downloadDocument(docId) {
         </div>
       </div>
 
-      <div class="surface-card p-4 border-round shadow-1">
+      <div class="surface-card p-4 border-round shadow-1 mb-4">
         <h3 class="text-lg mb-3">Status History</h3>
         <div v-if="history.length">
           <Timeline :value="history">
@@ -187,6 +194,20 @@ function downloadDocument(docId) {
           </Timeline>
         </div>
         <div v-else class="text-color-secondary">No status changes yet.</div>
+      </div>
+
+      <div class="surface-card p-4 border-round shadow-1">
+        <h3 class="text-lg mb-3">Comments</h3>
+        <div v-if="comments.length">
+          <div v-for="c in comments" :key="c.id" class="p-2 border-bottom-1 surface-border">
+            <div class="flex align-items-center gap-2 mb-1">
+              <span class="font-bold">{{ c.user_name }}</span>
+              <small class="text-color-secondary">{{ new Date(c.created_at).toLocaleString() }}</small>
+            </div>
+            <p class="text-sm m-0">{{ c.body }}</p>
+          </div>
+        </div>
+        <div v-else class="text-color-secondary">No comments yet.</div>
       </div>
     </template>
     <div v-else class="text-center text-color-secondary p-4">Application not found.</div>

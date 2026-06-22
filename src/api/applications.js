@@ -8,3 +8,5 @@ export const updateApplication = (id, data) => api.put(`/applications/${id}`, da
 export const submitApplication = (id) => api.post(`/applications/${id}/submit`)
 export const changeApplicationStatus = (id, data) => api.patch(`/applications/${id}/status`, data)
 export const getApplicationHistory = (id, config = {}) => api.get(`/applications/${id}/history`, config)
+export const getApplicationComments = (id, config = {}) => api.get(`/applications/${id}/comments`, config)
+export const addApplicationComment = (id, data) => api.post(`/applications/${id}/comments`, data)
