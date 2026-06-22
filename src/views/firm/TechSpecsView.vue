@@ -25,15 +25,6 @@ const form = ref({
   product_owner_id: ''
 })
 
-const STATUS_OPTIONS = [
-  { label: 'Draft', value: 'draft' },
-  { label: 'Published', value: 'published' },
-  { label: 'In Pairing', value: 'in_pairing' },
-  { label: 'Assigned', value: 'assigned' },
-  { label: 'In Realization', value: 'in_realization' },
-  { label: 'Closed', value: 'closed' }
-]
-
 onMounted(fetchTechSpecs)
 
 async function fetchTechSpecs() {
