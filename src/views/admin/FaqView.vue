@@ -3,7 +3,6 @@ import { ref, onMounted } from 'vue'
 import { useAbortController } from '@/composables/useAbortController'
 import { getFaq, createFaq, updateFaq, deleteFaq } from '@/api/content'
 import { useToast } from 'primevue/usetoast'
-import ConfirmDialog from '@/components/ConfirmDialog.vue'
 
 const items = ref([])
 const loading = ref(true)
@@ -105,7 +104,7 @@ async function handleDelete() {
         </div>
         <div class="flex flex-column gap-1">
           <label class="text-sm">Sort Order</label>
-          <InputNumber v-model="form.sort_order" :min="0" />
+          <InputText v-model="form.sort_order" type="number" />
         </div>
         <div class="flex align-items-center gap-2">
           <Checkbox v-model="form.is_published" :binary="true" />
@@ -118,14 +117,13 @@ async function handleDelete() {
       </template>
     </Dialog>
 
-    <ConfirmDialog
-      :visible="!!deleteTarget"
-      title="Delete FAQ"
-      :message="`Delete '${deleteTarget?.question}'?`"
-      :loading="deleting"
-      @confirm="handleDelete"
-      @cancel="deleteTarget = null"
-    />
+    <Dialog v-model:visible="deleteTarget" header="Delete FAQ" :modal="true" :style="{ width: '400px' }">
+      <p>Delete "{{ (deleteTarget || {}).question }}"?</p>
+      <template #footer>
+        <Button label="Cancel" severity="secondary" @click="deleteTarget = null" />
+        <Button label="Delete" severity="danger" :loading="deleting" @click="handleDelete" />
+      </template>
+    </Dialog>
 
     <div v-if="loading" class="flex justify-content-center p-4">
       <ProgressBar mode="indeterminate" style="width: 300px;" />

@@ -1,22 +1,41 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useNotificationsStore } from '@/stores/notifications'
 import { useAuthStore } from '@/stores/auth'
 
 const auth = useAuthStore()
 const notificationsStore = useNotificationsStore()
 const popoverVisible = ref(false)
+const bellRef = ref(null)
+const dropdownRef = ref(null)
 
 onMounted(() => {
   if (auth.isLoggedIn) {
     notificationsStore.fetchUnreadCount()
   }
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
 })
 
 function togglePopover(event) {
+  event.stopPropagation()
   popoverVisible.value = !popoverVisible.value
   if (popoverVisible.value) {
     notificationsStore.fetchNotifications()
+  }
+}
+
+function handleClickOutside(event) {
+  if (
+    dropdownRef.value &&
+    !dropdownRef.value.contains(event.target) &&
+    bellRef.value &&
+    !bellRef.value.$el.contains(event.target)
+  ) {
+    popoverVisible.value = false
   }
 }
 
@@ -43,8 +62,9 @@ function timeAgo(dateStr) {
 </script>
 
 <template>
-  <div v-if="auth.isLoggedIn" class="relative">
+  <div v-if="auth.isLoggedIn" style="position: relative;">
     <Button
+      ref="bellRef"
       :badge="notificationsStore.unreadCount > 0 ? String(notificationsStore.unreadCount) : undefined"
       badgeSeverity="danger"
       icon="pi pi-bell"
@@ -55,7 +75,11 @@ function timeAgo(dateStr) {
       @click="togglePopover"
     />
 
-    <Popover v-model:visible="popoverVisible" :style="{ width: '360px' }">
+    <div
+      v-if="popoverVisible"
+      ref="dropdownRef"
+      class="notification-dropdown"
+    >
       <div class="flex flex-column">
         <div class="flex justify-content-between align-items-center px-2 py-2 border-bottom-1 surface-border">
           <span class="font-bold">Notifications</span>
@@ -67,7 +91,7 @@ function timeAgo(dateStr) {
             @click="handleMarkAllRead"
           />
         </div>
-        <div class="overflow-y-auto" style="max-height: 400px;">
+        <div class="overflow-y-auto" style="max-height: 350px;">
           <div v-if="notificationsStore.loading" class="flex justify-content-center p-3">
             <i class="pi pi-spin pi-spinner" />
           </div>
@@ -94,6 +118,22 @@ function timeAgo(dateStr) {
           </div>
         </div>
       </div>
-    </Popover>
+    </div>
   </div>
 </template>
+
+<style scoped>
+.notification-dropdown {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  margin-top: 4px;
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  width: 360px;
+  max-height: 400px;
+  z-index: 1100;
+}
+</style>

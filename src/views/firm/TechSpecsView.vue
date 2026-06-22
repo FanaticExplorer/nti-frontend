@@ -4,7 +4,6 @@ import { useAbortController } from '@/composables/useAbortController'
 import { getTechSpecs, createTechSpec, updateTechSpec, deleteTechSpec } from '@/api/techSpecs'
 import { useToast } from 'primevue/usetoast'
 import StatusBadge from '@/components/StatusBadge.vue'
-import ConfirmDialog from '@/components/ConfirmDialog.vue'
 
 const techSpecs = ref([])
 const loading = ref(true)
@@ -176,14 +175,13 @@ function canEdit(item) {
       </template>
     </Dialog>
 
-    <ConfirmDialog
-      :visible="!!deleteTarget"
-      title="Delete Tech Spec"
-      :message="`Delete '${deleteTarget?.title}'? This cannot be undone.`"
-      :loading="deleting"
-      @confirm="handleDelete"
-      @cancel="deleteTarget = null"
-    />
+    <Dialog v-model:visible="deleteTarget" header="Delete Tech Spec" :modal="true" :style="{ width: '400px' }">
+      <p>Delete "{{ (deleteTarget || {}).title }}"? This cannot be undone.</p>
+      <template #footer>
+        <Button label="Cancel" severity="secondary" @click="deleteTarget = null" />
+        <Button label="Delete" severity="danger" :loading="deleting" @click="handleDelete" />
+      </template>
+    </Dialog>
 
     <div v-if="loading" class="flex justify-content-center p-4">
       <ProgressBar mode="indeterminate" style="width: 300px;" />

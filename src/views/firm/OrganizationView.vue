@@ -4,7 +4,6 @@ import { useAbortController } from '@/composables/useAbortController'
 import { useToast } from 'primevue/usetoast'
 import { getOrganizations, updateOrganization, addOrganizationMember, getOrganizationMembers, updateOrganizationMember, removeOrganizationMember } from '@/api/organizations'
 import StatusBadge from '@/components/StatusBadge.vue'
-import ConfirmDialog from '@/components/ConfirmDialog.vue'
 
 const toast = useToast()
 const { signal } = useAbortController()
@@ -225,14 +224,13 @@ async function handleRemoveMember() {
         </div>
       </div>
 
-      <ConfirmDialog
-        :visible="!!removeTarget"
-        title="Remove Member"
-        :message="`Remove ${removeTarget?.full_name || removeTarget?.email} from the organization?`"
-        :loading="removingMember"
-        @confirm="handleRemoveMember"
-        @cancel="removeTarget = null"
-      />
+      <Dialog v-model:visible="removeTarget" header="Remove Member" :modal="true" :style="{ width: '400px' }">
+        <p>Remove {{ (removeTarget || {}).full_name || (removeTarget || {}).email }} from the organization?</p>
+        <template #footer>
+          <Button label="Cancel" severity="secondary" @click="removeTarget = null" />
+          <Button label="Remove" severity="danger" :loading="removingMember" @click="handleRemoveMember" />
+        </template>
+      </Dialog>
     </template>
     <div v-else class="text-center text-color-secondary p-4">No organization found.</div>
   </div>

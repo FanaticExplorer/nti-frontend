@@ -4,7 +4,6 @@ import { useAbortController } from '@/composables/useAbortController'
 import { getMyProfile, updateMyProfile } from '@/api/profiles'
 import { exportMyData, deleteMyAccount } from '@/api/users'
 import { useToast } from 'primevue/usetoast'
-import ConfirmDialog from '@/components/ConfirmDialog.vue'
 
 const toast = useToast()
 const { signal } = useAbortController()
@@ -203,13 +202,12 @@ async function handleDeleteAccount() {
       </div>
     </div>
 
-    <ConfirmDialog
-      :visible="deleteConfirmVisible"
-      title="Delete Account"
-      message="This will anonymize your account and remove all personal data. This action cannot be undone. Are you sure?"
-      :loading="deleting"
-      @confirm="handleDeleteAccount"
-      @cancel="deleteConfirmVisible = false"
-    />
+    <Dialog v-model:visible="deleteConfirmVisible" header="Delete Account" :modal="true" :style="{ width: '450px' }">
+      <p>This will anonymize your account and remove all personal data. This action cannot be undone. Are you sure?</p>
+      <template #footer>
+        <Button label="Cancel" severity="secondary" @click="deleteConfirmVisible = false" />
+        <Button label="Delete My Account" severity="danger" :loading="deleting" @click="handleDeleteAccount" />
+      </template>
+    </Dialog>
   </div>
 </template>
