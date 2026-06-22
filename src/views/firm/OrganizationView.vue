@@ -2,8 +2,9 @@
 import { ref, onMounted } from 'vue'
 import { useAbortController } from '@/composables/useAbortController'
 import { useToast } from 'primevue/usetoast'
-import { getOrganizations, updateOrganization, addOrganizationMember } from '@/api/organizations'
+import { getOrganizations, updateOrganization, addOrganizationMember, getOrganizationMembers, updateOrganizationMember, removeOrganizationMember } from '@/api/organizations'
 import StatusBadge from '@/components/StatusBadge.vue'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
 
 const toast = useToast()
 const { signal } = useAbortController()
@@ -17,12 +18,25 @@ const newMemberEmail = ref('')
 const newMemberRole = ref('')
 const addingMember = ref(false)
 
+const members = ref([])
+const loadingMembers = ref(false)
+const removeTarget = ref(null)
+const removingMember = ref(false)
+
+const ROLE_OPTIONS = [
+  { label: 'Owner', value: 'owner' },
+  { label: 'Admin', value: 'admin' },
+  { label: 'Member', value: 'member' },
+  { label: 'Product Owner', value: 'product_owner' }
+]
+
 onMounted(async () => {
   try {
     const { data } = await getOrganizations(undefined, { signal })
     org.value = data.items?.[0] || null
     if (org.value) {
       form.value = { ...org.value }
+      fetchMembers()
     }
   } catch (err) {
     if (err?.code === "ERR_CANCELED") return
@@ -47,6 +61,18 @@ async function handleSave() {
   }
 }
 
+async function fetchMembers() {
+  loadingMembers.value = true
+  try {
+    const { data } = await getOrganizationMembers(org.value.id, { signal })
+    members.value = data.items || data
+  } catch (err) {
+    if (err?.code === "ERR_CANCELED") return
+  } finally {
+    loadingMembers.value = false
+  }
+}
+
 async function handleAddMember() {
   if (!newMemberEmail.value) return
   addingMember.value = true
@@ -54,13 +80,43 @@ async function handleAddMember() {
     await addOrganizationMember(org.value.id, { email: newMemberEmail.value, role_in_org: newMemberRole.value })
     newMemberEmail.value = ''
     newMemberRole.value = ''
-    const { data } = await getOrganizations(undefined, { signal })
-    org.value = data.items?.[0] || null
+    await fetchMembers()
+    toast.add({ severity: 'success', summary: 'Member added', life: 3000 })
+  } catch (err) {
+    if (err?.code === "ERR_CANCELED") return
+    toast.add({ severity: 'error', summary: 'Error', detail: err.response?.data?.detail || 'Action failed', life: 5000 })
+  } finally {
+    addingMember.value = false
+  }
+}
+
+async function handleRoleChange(member, role) {
+  try {
+    await updateOrganizationMember(org.value.id, member.user_id || member.id, { role_in_org: role })
+    member.role_in_org = role
+    toast.add({ severity: 'success', summary: 'Role updated', life: 3000 })
+  } catch (err) {
+    if (err?.code === "ERR_CANCELED") return
+    toast.add({ severity: 'error', summary: 'Error', detail: 'Action failed', life: 5000 })
+  }
+}
+
+function confirmRemove(member) {
+  removeTarget.value = member
+}
+
+async function handleRemoveMember() {
+  removingMember.value = true
+  try {
+    await removeOrganizationMember(org.value.id, removeTarget.value.user_id || removeTarget.value.id)
+    removeTarget.value = null
+    await fetchMembers()
+    toast.add({ severity: 'success', summary: 'Member removed', life: 3000 })
   } catch (err) {
     if (err?.code === "ERR_CANCELED") return
     toast.add({ severity: 'error', summary: 'Error', detail: 'Action failed', life: 5000 })
   } finally {
-    addingMember.value = false
+    removingMember.value = false
   }
 }
 </script>
@@ -130,11 +186,28 @@ async function handleAddMember() {
 
       <div class="surface-card p-4 border-round shadow-1">
         <h3 class="text-lg mb-3">Members</h3>
-        <div v-if="org.members?.length" class="mb-4">
-          <DataTable :value="org.members" class="p-datatable-sm">
+        <div v-if="members.length" class="mb-4">
+          <DataTable :value="members" class="p-datatable-sm">
             <Column field="full_name" header="Name" />
             <Column field="email" header="Email" />
-            <Column field="role_in_org" header="Role" />
+            <Column header="Role">
+              <template #body="{ data }">
+                <Dropdown
+                  v-model="data.role_in_org"
+                  :options="ROLE_OPTIONS"
+                  optionLabel="label"
+                  optionValue="value"
+                  size="small"
+                  class="w-9rem"
+                  @change="(e) => handleRoleChange(data, e.value)"
+                />
+              </template>
+            </Column>
+            <Column header="">
+              <template #body="{ data }">
+                <Button icon="pi pi-trash" text size="small" severity="danger" @click="confirmRemove(data)" />
+              </template>
+            </Column>
           </DataTable>
         </div>
         <div v-else class="text-color-secondary mb-3">No members.</div>
@@ -146,11 +219,20 @@ async function handleAddMember() {
           </div>
           <div class="flex flex-column gap-1">
             <label class="text-sm">Role</label>
-            <InputText v-model="newMemberRole" placeholder="employee" />
+            <Dropdown v-model="newMemberRole" :options="ROLE_OPTIONS" optionLabel="label" optionValue="value" placeholder="Select role" class="w-9rem" />
           </div>
-          <Button label="Add Member" icon="pi pi-plus" :loading="addingMember" @click="handleAddMember" />
+          <Button label="Add" icon="pi pi-plus" :loading="addingMember" @click="handleAddMember" />
         </div>
       </div>
+
+      <ConfirmDialog
+        :visible="!!removeTarget"
+        title="Remove Member"
+        :message="`Remove ${removeTarget?.full_name || removeTarget?.email} from the organization?`"
+        :loading="removingMember"
+        @confirm="handleRemoveMember"
+        @cancel="removeTarget = null"
+      />
     </template>
     <div v-else class="text-center text-color-secondary p-4">No organization found.</div>
   </div>
