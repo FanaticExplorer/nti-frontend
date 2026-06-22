@@ -4,7 +4,7 @@ import { useAbortController } from '@/composables/useAbortController'
 import { useRoute } from 'vue-router'
 import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
-import { getTeam, inviteTeamMember, removeTeamMember } from '@/api/teams'
+import { getTeam, inviteTeamMember, removeTeamMember, joinTeam } from '@/api/teams'
 import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
@@ -19,6 +19,8 @@ const inviteEmail = ref('')
 const inviting = ref(false)
 
 const isLeader = ref(false)
+const isMember = ref(false)
+const joining = ref(false)
 
 onMounted(async () => {
   await fetchTeam()
@@ -29,6 +31,7 @@ async function fetchTeam() {
     const { data } = await getTeam(route.params.id, { signal })
     team.value = data
     isLeader.value = data.leader_id === auth.user?.id
+    isMember.value = data.members?.some((m) => m.id === auth.user?.id) ?? false
   } catch (err) {
     if (err?.code === "ERR_CANCELED") return
     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 })
@@ -68,6 +71,20 @@ async function handleRemove(userId, userName) {
     }
   })
 }
+
+async function handleJoin() {
+  joining.value = true
+  try {
+    await joinTeam(team.value.id)
+    toast.add({ severity: 'success', summary: 'Joined team', life: 3000 })
+    await fetchTeam()
+  } catch (err) {
+    if (err?.code === "ERR_CANCELED") return
+    toast.add({ severity: 'error', summary: 'Error', detail: err?.response?.data?.detail || 'Action failed', life: 5000 })
+  } finally {
+    joining.value = false
+  }
+}
 </script>
 
 <template>
@@ -106,6 +123,10 @@ async function handleRemove(userId, userName) {
           </DataTable>
         </div>
         <div v-else class="text-color-secondary mb-3">No members yet.</div>
+
+        <div v-if="!isMember && ['student', 'team_leader'].includes(auth.userRole)" class="mb-3">
+          <Button label="Join Team" icon="pi pi-user-plus" :loading="joining" @click="handleJoin" />
+        </div>
 
         <div v-if="isLeader" class="flex gap-2 align-items-end">
           <div class="flex flex-column gap-1 flex-grow-1">
