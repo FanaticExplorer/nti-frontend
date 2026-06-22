@@ -9,7 +9,7 @@ const loading = ref(true)
 const showDialog = ref(false)
 const editItem = ref(null)
 const saving = ref(false)
-const form = ref({ title: '', slug: '', body: '', meta_title: '', meta_description: '', is_published: false })
+const form = ref({ title: '', slug: '', body: '', meta_title: '', meta_description: '', og_image: '', is_published: false })
 const toast = useToast()
 const { signal } = useAbortController()
 
@@ -27,7 +27,7 @@ async function fetchPages() {
 
 function openCreate() {
   editItem.value = null
-  form.value = { title: '', slug: '', body: '', meta_title: '', meta_description: '', is_published: false }
+  form.value = { title: '', slug: '', body: '', meta_title: '', meta_description: '', og_image: '', is_published: false }
   showDialog.value = true
 }
 
@@ -67,6 +67,7 @@ async function handleSave() {
         <Textarea v-model="form.body" placeholder="Body" rows="8" />
         <InputText v-model="form.meta_title" placeholder="Meta Title" />
         <InputText v-model="form.meta_description" placeholder="Meta Description" />
+        <InputText v-model="form.og_image" placeholder="OG Image URL" />
         <div class="flex align-items-center gap-2">
           <Checkbox v-model="form.is_published" :binary="true" />
           <label>Published</label>

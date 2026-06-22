@@ -20,6 +20,7 @@ const saving = ref(false)
 
 const selectedCall = ref(null)
 const selectedTeam = ref(null)
+const techSpecId = ref(null)
 const formData = ref({
   project_title: '',
   project_description: '',
@@ -40,6 +41,7 @@ onMounted(async () => {
     if (callId) {
       selectedCall.value = calls.value.find((c) => c.id.toString() === callId.toString()) || null
     }
+    techSpecId.value = route.query.tech_spec_id || null
   } catch (err) {
     if (err?.code === "ERR_CANCELED") return
     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 })
@@ -51,12 +53,17 @@ onMounted(async () => {
 async function handleSave() {
   saving.value = true
   try {
-    const { data } = await createApplication({
-      call_id: selectedCall.value.id,
+    const payload = {
       team_id: selectedTeam.value.id,
       form_data: formData.value,
       is_draft: true
-    })
+    }
+    if (techSpecId.value) {
+      payload.tech_spec_id = techSpecId.value
+    } else if (selectedCall.value) {
+      payload.call_id = selectedCall.value.id
+    }
+    const { data } = await createApplication(payload)
     router.push(`/student/applications/${data.id}`)
     toast.add({ severity: 'success', summary: 'Application saved as draft', life: 3000 })
   } catch (err) {
@@ -84,10 +91,13 @@ async function handleSave() {
         ]" :activeStep="step - 1" class="mb-4" />
 
         <div v-if="step === 1">
+          <div v-if="techSpecId" class="mb-3 p-3 bg-blue-50 border-round">
+            <p class="text-sm m-0">Applying to Tech Spec (Program B)</p>
+          </div>
           <h3 class="mb-3">Select Call</h3>
-          <Dropdown v-model="selectedCall" :options="calls" optionLabel="title" placeholder="Select a call" class="w-full mb-3" :disabled="!!route.query.call_id" />
+          <Dropdown v-model="selectedCall" :options="calls" optionLabel="title" placeholder="Select a call" class="w-full mb-3" :disabled="!!route.query.call_id || !!techSpecId" />
           <div class="flex justify-content-end">
-            <Button label="Next" :disabled="!selectedCall" @click="step = 2" />
+            <Button label="Next" :disabled="!selectedCall && !techSpecId" @click="step = 2" />
           </div>
         </div>
 
