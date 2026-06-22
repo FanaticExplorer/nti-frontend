@@ -2,7 +2,9 @@
 import { ref, onMounted } from 'vue'
 import { useAbortController } from '@/composables/useAbortController'
 import { getMyProfile, updateMyProfile } from '@/api/profiles'
+import { exportMyData, deleteMyAccount } from '@/api/users'
 import { useToast } from 'primevue/usetoast'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
 
 const toast = useToast()
 const { signal } = useAbortController()
@@ -10,6 +12,9 @@ const profile = ref(null)
 const loading = ref(true)
 const editing = ref(false)
 const saving = ref(false)
+const exporting = ref(false)
+const deleteConfirmVisible = ref(false)
+const deleting = ref(false)
 
 const form = ref({
   university: '',
@@ -58,6 +63,38 @@ async function handleSave() {
 
 function startEdit() {
   editing.value = true
+}
+
+async function handleExport() {
+  exporting.value = true
+  try {
+    const response = await exportMyData()
+    const blob = new Blob([JSON.stringify(response.data, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'my-data.json'
+    a.click()
+    URL.revokeObjectURL(url)
+    toast.add({ severity: 'success', summary: 'Data exported', life: 3000 })
+  } catch (err) {
+    toast.add({ severity: 'error', summary: 'Error', detail: err.response?.data?.detail || 'Export failed', life: 5000 })
+  } finally {
+    exporting.value = false
+  }
+}
+
+async function handleDeleteAccount() {
+  deleting.value = true
+  try {
+    await deleteMyAccount()
+    deleteConfirmVisible.value = false
+    toast.add({ severity: 'success', summary: 'Account deleted', detail: 'Your account has been anonymized.', life: 5000 })
+  } catch (err) {
+    toast.add({ severity: 'error', summary: 'Error', detail: err.response?.data?.detail || 'Action failed', life: 5000 })
+  } finally {
+    deleting.value = false
+  }
 }
 </script>
 
@@ -157,5 +194,22 @@ function startEdit() {
       <p class="mb-3">No profile yet. Create one to get started.</p>
       <Button label="Create Profile" @click="editing = true" />
     </div>
+
+    <div class="surface-card p-4 border-round shadow-1 mt-4" style="max-width: 700px;">
+      <h3 class="text-lg mb-3">Privacy & Data</h3>
+      <div class="flex gap-2">
+        <Button label="Export My Data" icon="pi pi-download" severity="secondary" :loading="exporting" @click="handleExport" />
+        <Button label="Delete My Account" icon="pi pi-trash" severity="danger" @click="deleteConfirmVisible = true" />
+      </div>
+    </div>
+
+    <ConfirmDialog
+      :visible="deleteConfirmVisible"
+      title="Delete Account"
+      message="This will anonymize your account and remove all personal data. This action cannot be undone. Are you sure?"
+      :loading="deleting"
+      @confirm="handleDeleteAccount"
+      @cancel="deleteConfirmVisible = false"
+    />
   </div>
 </template>
