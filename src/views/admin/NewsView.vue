@@ -83,14 +83,14 @@ async function handleSave() {
       <DataTable :value="news" class="p-datatable-sm">
         <Column field="title" header="Title" />
         <Column field="slug" header="Slug" />
-        <Column header="Published">
-          <template #body="{ data }">
-            {{ data.published_at ? new Date(data.published_at).toLocaleDateString() : '-' }}
-          </template>
-        </Column>
         <Column header="Status">
           <template #body="{ data }">
             <Tag :value="data.is_published ? 'Published' : 'Draft'" :severity="data.is_published ? 'success' : 'secondary'" />
+          </template>
+        </Column>
+        <Column header="Date">
+          <template #body="{ data }">
+            <small>{{ data.published_at ? new Date(data.published_at).toLocaleDateString() : '-' }}</small>
           </template>
         </Column>
         <Column header="">
