@@ -18,7 +18,11 @@ const severity = computed(() => {
     active: 'success',
     paused: 'warn',
     completed: 'success',
-    archived: 'secondary'
+    archived: 'secondary',
+    published: 'info',
+    in_pairing: 'warn',
+    assigned: 'success',
+    in_realization: 'info'
   }
   return map[props.status] || 'secondary'
 })
