@@ -14,6 +14,7 @@ import NewsDetailView from '@/views/public/NewsDetailView.vue'
 import ContactView from '@/views/public/ContactView.vue'
 import TechSpecBacklogView from '@/views/public/TechSpecBacklogView.vue'
 import FaqView from '@/views/public/FaqView.vue'
+import PageView from '@/views/public/PageView.vue'
 
 import LoginView from '@/views/auth/LoginView.vue'
 import RegisterView from '@/views/auth/RegisterView.vue'
@@ -70,7 +71,8 @@ const routes = [
       { path: 'news/:slug', name: 'news-detail', component: NewsDetailView },
       { path: 'contact', name: 'contact', component: ContactView },
       { path: 'tech-specs', name: 'tech-spec-backlog', component: TechSpecBacklogView },
-      { path: 'faq', name: 'faq', component: FaqView }
+      { path: 'faq', name: 'faq', component: FaqView },
+      { path: 'pages/:slug', name: 'page', component: PageView }
     ]
   },
   {

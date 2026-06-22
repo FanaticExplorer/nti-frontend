@@ -5,6 +5,7 @@ export const getNewsArticle = (slug, config = {}) => api.get(`/content/news/${sl
 export const createNews = (data) => api.post('/content/news', data)
 export const updateNews = (id, data) => api.put(`/content/news/${id}`, data)
 export const getPages = (params, config = {}) => api.get('/content/pages', { params, ...config })
+export const getPageBySlug = (slug, config = {}) => api.get(`/content/pages/${slug}`, config)
 export const createPage = (data) => api.post('/content/pages', data)
 export const updatePage = (id, data) => api.put(`/content/pages/${id}`, data)
 export const getFaq = (params, config = {}) => api.get('/content/faq', { params, ...config })
