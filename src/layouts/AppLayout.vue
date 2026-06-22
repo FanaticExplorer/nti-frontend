@@ -53,7 +53,8 @@ const sidebarLinks = computed(() => {
       { label: 'Applications', icon: 'pi pi-file', to: '/admin/applications' },
       { label: 'Content Pages', icon: 'pi pi-file-edit', to: '/admin/content' },
       { label: 'News', icon: 'pi pi-globe', to: '/admin/news' },
-      { label: 'FAQ', icon: 'pi pi-question-circle', to: '/admin/faq' }
+      { label: 'FAQ', icon: 'pi pi-question-circle', to: '/admin/faq' },
+      { label: 'Contact Messages', icon: 'pi pi-envelope', to: '/admin/contact-messages' }
     ],
     super_admin: [
       { label: 'Dashboard', icon: 'pi pi-home', to: '/admin/dashboard' },
@@ -65,6 +66,7 @@ const sidebarLinks = computed(() => {
       { label: 'Content Pages', icon: 'pi pi-file-edit', to: '/admin/content' },
       { label: 'News', icon: 'pi pi-globe', to: '/admin/news' },
       { label: 'FAQ', icon: 'pi pi-question-circle', to: '/admin/faq' },
+      { label: 'Contact Messages', icon: 'pi pi-envelope', to: '/admin/contact-messages' },
       { label: 'Audit Log', icon: 'pi pi-list', to: '/admin/audit-log' }
     ]
   }

@@ -51,6 +51,7 @@ import AdminApplicationDetail from '@/views/admin/ApplicationDetailView.vue'
 import AdminContent from '@/views/admin/ContentPagesView.vue'
 import AdminNews from '@/views/admin/NewsView.vue'
 import AdminFaq from '@/views/admin/FaqView.vue'
+import AdminContactMessages from '@/views/admin/ContactMessagesView.vue'
 import AdminAuditLog from '@/views/admin/AuditLogView.vue'
 
 import UnauthorizedView from '@/views/shared/UnauthorizedView.vue'
@@ -156,6 +157,7 @@ const routes = [
       { path: 'content', name: 'admin-content', component: AdminContent, meta: { roles: ['nti_admin', 'super_admin', 'content_editor'] } },
       { path: 'news', name: 'admin-news', component: AdminNews, meta: { roles: ['nti_admin', 'super_admin', 'content_editor'] } },
       { path: 'faq', name: 'admin-faq', component: AdminFaq, meta: { roles: ['nti_admin', 'super_admin', 'content_editor'] } },
+      { path: 'contact-messages', name: 'admin-contact-messages', component: AdminContactMessages, meta: { roles: ['nti_admin', 'super_admin'] } },
       { path: 'audit-log', name: 'admin-audit-log', component: AdminAuditLog, meta: { roles: ['super_admin'] } }
     ]
   },
