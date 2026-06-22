@@ -12,6 +12,7 @@ import CallDetailView from '@/views/public/CallDetailView.vue'
 import NewsView from '@/views/public/NewsView.vue'
 import NewsDetailView from '@/views/public/NewsDetailView.vue'
 import ContactView from '@/views/public/ContactView.vue'
+import TechSpecBacklogView from '@/views/public/TechSpecBacklogView.vue'
 
 import LoginView from '@/views/auth/LoginView.vue'
 import RegisterView from '@/views/auth/RegisterView.vue'
@@ -64,7 +65,8 @@ const routes = [
       { path: 'calls/:id', name: 'call-detail', component: CallDetailView },
       { path: 'news', name: 'news', component: NewsView },
       { path: 'news/:slug', name: 'news-detail', component: NewsDetailView },
-      { path: 'contact', name: 'contact', component: ContactView }
+      { path: 'contact', name: 'contact', component: ContactView },
+      { path: 'tech-specs', name: 'tech-spec-backlog', component: TechSpecBacklogView }
     ]
   },
   {
