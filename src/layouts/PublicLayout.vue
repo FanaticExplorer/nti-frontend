@@ -20,6 +20,7 @@ const user = computed(() => auth.user)
           <router-link to="/news" class="text-color-secondary no-underline hover:text-primary">News</router-link>
           <router-link to="/contact" class="text-color-secondary no-underline hover:text-primary">Contact</router-link>
           <router-link to="/tech-specs" class="text-color-secondary no-underline hover:text-primary">Tech Specs</router-link>
+          <router-link to="/faq" class="text-color-secondary no-underline hover:text-primary">FAQ</router-link>
         </nav>
         <div class="flex align-items-center gap-2">
           <template v-if="isLoggedIn">

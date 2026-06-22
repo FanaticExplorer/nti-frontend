@@ -41,7 +41,8 @@ const sidebarLinks = computed(() => {
     ],
     content_editor: [
       { label: 'Pages', icon: 'pi pi-file', to: '/admin/content' },
-      { label: 'News', icon: 'pi pi-globe', to: '/admin/news' }
+      { label: 'News', icon: 'pi pi-globe', to: '/admin/news' },
+      { label: 'FAQ', icon: 'pi pi-question-circle', to: '/admin/faq' }
     ],
     nti_admin: [
       { label: 'Dashboard', icon: 'pi pi-home', to: '/admin/dashboard' },
@@ -51,7 +52,8 @@ const sidebarLinks = computed(() => {
       { label: 'Calls', icon: 'pi pi-megaphone', to: '/admin/calls' },
       { label: 'Applications', icon: 'pi pi-file', to: '/admin/applications' },
       { label: 'Content Pages', icon: 'pi pi-file-edit', to: '/admin/content' },
-      { label: 'News', icon: 'pi pi-globe', to: '/admin/news' }
+      { label: 'News', icon: 'pi pi-globe', to: '/admin/news' },
+      { label: 'FAQ', icon: 'pi pi-question-circle', to: '/admin/faq' }
     ],
     super_admin: [
       { label: 'Dashboard', icon: 'pi pi-home', to: '/admin/dashboard' },
@@ -62,6 +64,7 @@ const sidebarLinks = computed(() => {
       { label: 'Applications', icon: 'pi pi-file', to: '/admin/applications' },
       { label: 'Content Pages', icon: 'pi pi-file-edit', to: '/admin/content' },
       { label: 'News', icon: 'pi pi-globe', to: '/admin/news' },
+      { label: 'FAQ', icon: 'pi pi-question-circle', to: '/admin/faq' },
       { label: 'Audit Log', icon: 'pi pi-list', to: '/admin/audit-log' }
     ]
   }

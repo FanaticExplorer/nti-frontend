@@ -13,6 +13,7 @@ import NewsView from '@/views/public/NewsView.vue'
 import NewsDetailView from '@/views/public/NewsDetailView.vue'
 import ContactView from '@/views/public/ContactView.vue'
 import TechSpecBacklogView from '@/views/public/TechSpecBacklogView.vue'
+import FaqView from '@/views/public/FaqView.vue'
 
 import LoginView from '@/views/auth/LoginView.vue'
 import RegisterView from '@/views/auth/RegisterView.vue'
@@ -49,6 +50,7 @@ import AdminApplications from '@/views/admin/ApplicationsView.vue'
 import AdminApplicationDetail from '@/views/admin/ApplicationDetailView.vue'
 import AdminContent from '@/views/admin/ContentPagesView.vue'
 import AdminNews from '@/views/admin/NewsView.vue'
+import AdminFaq from '@/views/admin/FaqView.vue'
 import AdminAuditLog from '@/views/admin/AuditLogView.vue'
 
 import UnauthorizedView from '@/views/shared/UnauthorizedView.vue'
@@ -66,7 +68,8 @@ const routes = [
       { path: 'news', name: 'news', component: NewsView },
       { path: 'news/:slug', name: 'news-detail', component: NewsDetailView },
       { path: 'contact', name: 'contact', component: ContactView },
-      { path: 'tech-specs', name: 'tech-spec-backlog', component: TechSpecBacklogView }
+      { path: 'tech-specs', name: 'tech-spec-backlog', component: TechSpecBacklogView },
+      { path: 'faq', name: 'faq', component: FaqView }
     ]
   },
   {
@@ -152,6 +155,7 @@ const routes = [
       { path: 'applications/:id', name: 'admin-application-detail', component: AdminApplicationDetail, meta: { roles: ['nti_admin', 'super_admin', 'evaluator', 'mentor'] } },
       { path: 'content', name: 'admin-content', component: AdminContent, meta: { roles: ['nti_admin', 'super_admin', 'content_editor'] } },
       { path: 'news', name: 'admin-news', component: AdminNews, meta: { roles: ['nti_admin', 'super_admin', 'content_editor'] } },
+      { path: 'faq', name: 'admin-faq', component: AdminFaq, meta: { roles: ['nti_admin', 'super_admin', 'content_editor'] } },
       { path: 'audit-log', name: 'admin-audit-log', component: AdminAuditLog, meta: { roles: ['super_admin'] } }
     ]
   },
