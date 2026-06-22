@@ -21,7 +21,7 @@ onMounted(async () => {
   try {
     const [appRes, teamRes] = await Promise.all([
       getMyApplications(undefined, { signal }),
-      getMyTeams(undefined, { signal })
+      getMyTeams({ signal })
     ])
     applications.value = appRes.data.items
     teams.value = teamRes.data.items

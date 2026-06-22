@@ -21,7 +21,7 @@ const chartOptions = {
 
 onMounted(async () => {
   try {
-    const { data } = await getStats(undefined, { signal })
+    const { data } = await getStats({ signal })
     stats.value = data
 
     if (data.applications_by_status) {
@@ -50,7 +50,7 @@ onMounted(async () => {
 
 async function handleExport() {
   try {
-    const res = await exportApplications(undefined, { signal })
+    const res = await exportApplications({ signal })
     const url = URL.createObjectURL(res.data)
     const a = document.createElement('a')
     a.href = url

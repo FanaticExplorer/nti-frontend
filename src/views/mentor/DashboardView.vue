@@ -11,7 +11,7 @@ const { signal } = useAbortController()
 
 onMounted(async () => {
   try {
-    const { data } = await getMyMentorships(undefined, { signal })
+    const { data } = await getMyMentorships({ signal })
     mentorships.value = data.items
   } catch (err) {
     if (err?.code === "ERR_CANCELED") return
