@@ -72,7 +72,7 @@ onMounted(async () => {
         <div v-for="item in news" :key="item.id" class="col-12 md:col-4">
           <div class="surface-card p-4 border-round shadow-1 h-full">
             <h3 class="mb-2">{{ item.title }}</h3>
-            <small class="text-color-secondary">{{ new Date(item.published_at).toLocaleDateString() }}</small>
+            <small class="text-color-secondary">{{ item.published_at ? new Date(item.published_at).toLocaleDateString() : '-' }}</small>
             <p class="text-color-secondary mt-2">{{ item.body?.substring(0, 150) }}...</p>
             <router-link :to="`/news/${item.slug}`" custom v-slot="{ navigate }">
               <Button label="Read more" variant="text" size="small" @click="navigate" />

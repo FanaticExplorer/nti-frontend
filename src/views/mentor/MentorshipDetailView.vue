@@ -141,7 +141,7 @@ async function handleMilestoneStatus(milestone, newStatus) {
         </div>
         <div v-if="logs.length">
           <div v-for="log in logs" :key="log.id" class="p-2 border-bottom-1 surface-border">
-            <small class="text-color-secondary">{{ new Date(log.created_at).toLocaleString() }}</small>
+            <small class="text-color-secondary">{{ new Date(log.logged_at).toLocaleString() }}</small>
             <p class="m-0 mt-1">{{ log.content }}</p>
           </div>
         </div>

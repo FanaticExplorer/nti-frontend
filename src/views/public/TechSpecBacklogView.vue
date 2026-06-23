@@ -47,7 +47,7 @@ function onPageChange(event) {
         <Column field="title" header="Title" />
         <Column header="Organization">
           <template #body="{ data }">
-            {{ data.organization?.name || '-' }}
+            {{ data.organization_name || '-' }}
           </template>
         </Column>
         <Column header="Status">

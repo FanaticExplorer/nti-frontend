@@ -31,7 +31,7 @@ onMounted(async () => {
     <div v-else-if="news.length" class="flex flex-column gap-3">
       <div v-for="item in news" :key="item.id" class="surface-card p-4 border-round shadow-1">
         <h3 class="mb-1">{{ item.title }}</h3>
-        <small class="text-color-secondary">{{ new Date(item.published_at).toLocaleDateString() }}</small>
+        <small class="text-color-secondary">{{ item.published_at ? new Date(item.published_at).toLocaleDateString() : '-' }}</small>
         <p class="text-color-secondary mt-2">{{ item.body?.substring(0, 200) }}...</p>
         <router-link :to="`/news/${item.slug}`" custom v-slot="{ navigate }">
           <Button label="Read more" variant="text" size="small" @click="navigate" />
