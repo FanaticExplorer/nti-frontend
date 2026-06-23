@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useAbortController } from '@/composables/useAbortController'
-import { getMyProfile, updateMyProfile } from '@/api/profiles'
+import { getMyProfile, updateMyProfile, createProfile } from '@/api/profiles'
 import { exportMyData, deleteMyAccount } from '@/api/users'
 import { useToast } from 'primevue/usetoast'
 
@@ -28,13 +28,13 @@ const form = ref({
 
 onMounted(async () => {
   try {
-    const { data } = await getMyProfile(undefined, { signal })
+    const { data } = await getMyProfile({ signal })
     profile.value = data
     Object.assign(form.value, data)
   } catch (err) {
     if (err.response?.status === 404) {
       profile.value = null
-    } else {
+    } else if (err?.code !== "ERR_CANCELED") {
       toast.add({ severity: 'error', summary: 'Error', detail: err?.response?.data?.detail || 'Failed to load data', life: 5000 })
     }
   } finally {
@@ -47,9 +47,10 @@ async function handleSave() {
   try {
     const payload = {
       ...form.value,
-      skills: form.value.skills.split(',').map((s) => s.trim()).filter(Boolean)
+      year_of_study: parseInt(form.value.year_of_study) || null,
+      skills: typeof form.value.skills === 'string' ? form.value.skills.split(',').map((s) => s.trim()).filter(Boolean) : form.value.skills
     }
-    const { data } = await updateMyProfile(payload)
+    const { data } = profile.value ? await updateMyProfile(payload) : await createProfile(payload)
     profile.value = data
     editing.value = false
   } catch (err) {
