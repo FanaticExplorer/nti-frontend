@@ -73,15 +73,15 @@ async function fetchData() {
     } catch { /* ok if user fetch fails */ }
 
     try {
-      const [evRes, milRes, commRes] = await Promise.all([
+      const [evRes, milRes, commRes] = await Promise.allSettled([
         getEvaluations(app.value.id),
         getMilestones(app.value.id, { signal }),
         getApplicationComments(app.value.id, { signal })
       ])
-      evaluations.value = evRes.data.items || evRes.data
-      milestones.value = milRes.data.items || milRes.data
-      comments.value = commRes.data.items || commRes.data
-    } catch { toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 }) }
+      if (evRes.status === 'fulfilled') evaluations.value = evRes.value.data.items || evRes.value.data
+      if (milRes.status === 'fulfilled') milestones.value = milRes.value.data.items || milRes.value.data
+      if (commRes.status === 'fulfilled') comments.value = commRes.value.data.items || commRes.value.data
+    } catch { /* silently skip if all fail */ }
   } catch { toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 }) } finally {
     loading.value = false
   }
@@ -98,7 +98,7 @@ async function handleStatusChange() {
     newStatus.value = null
     comment.value = ''
     await fetchData()
-  } catch { toast.add({ severity: 'error', summary: 'Error', detail: 'Action failed', life: 5000 }) } finally {
+  } catch (err) { toast.add({ severity: 'error', summary: 'Error', detail: err?.response?.data?.detail || 'Action failed', life: 5000 }) } finally {
     saving.value = false
   }
 }
@@ -113,7 +113,7 @@ async function handleAssignMentor() {
     })
     selectedMentor.value = null
     await fetchData()
-  } catch { toast.add({ severity: 'error', summary: 'Error', detail: 'Action failed', life: 5000 }) } finally {
+  } catch (err) { toast.add({ severity: 'error', summary: 'Error', detail: err?.response?.data?.detail || 'Action failed', life: 5000 }) } finally {
     saving.value = false
   }
 }
@@ -128,7 +128,7 @@ async function handleAddMilestone() {
     })
     newMilestone.value = { title: '', due_date: null }
     await fetchData()
-  } catch { toast.add({ severity: 'error', summary: 'Error', detail: 'Action failed', life: 5000 }) } finally {
+  } catch (err) { toast.add({ severity: 'error', summary: 'Error', detail: err?.response?.data?.detail || 'Action failed', life: 5000 }) } finally {
     saving.value = false
   }
 }
@@ -263,7 +263,7 @@ const availableTransitions = computed(() => {
         <div class="flex gap-2 align-items-end">
           <div class="flex flex-column gap-1">
             <label class="text-sm">New Status</label>
-            <Dropdown v-model="newStatus" :options="availableTransitions" />
+            <Dropdown v-model="newStatus" :options="availableTransitions" placeholder="Select status" />
           </div>
           <div v-if="requiresComment.includes(newStatus)" class="flex flex-column gap-1 flex-grow-1">
             <label class="text-sm">Comment (required)</label>
@@ -281,7 +281,7 @@ const availableTransitions = computed(() => {
               <div>
                 <div class="flex align-items-center gap-2 mb-1">
                   <StatusBadge :status="item.new_status" />
-                  <small class="text-color-secondary">{{ new Date(item.created_at).toLocaleString() }}</small>
+                  <small class="text-color-secondary">{{ new Date(item.changed_at).toLocaleString() }}</small>
                 </div>
                 <p v-if="item.comment" class="text-sm text-color-secondary m-0">{{ item.comment }}</p>
               </div>

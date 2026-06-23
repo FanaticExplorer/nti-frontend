@@ -48,13 +48,14 @@ onMounted(async () => {
   }
 })
 
-async function handleExport() {
+async function handleExport(format = 'csv') {
   try {
-    const res = await exportApplications({ signal })
+    const res = await exportApplications(format, { signal })
+    const ext = format === 'xlsx' ? 'xlsx' : 'csv'
     const url = URL.createObjectURL(res.data)
     const a = document.createElement('a')
     a.href = url
-    a.download = 'applications.csv'
+    a.download = `applications.${ext}`
     a.click()
     URL.revokeObjectURL(url)
   } catch { toast.add({ severity: 'error', summary: 'Error', detail: 'Action failed', life: 5000 }) }
@@ -90,13 +91,15 @@ async function handleExport() {
         <div class="col-12 md:col-6 lg:col-3">
           <div class="surface-card p-3 border-round shadow-1 text-center">
             <div class="text-3xl font-bold text-green-500">{{ stats.approved_applications }}</div>
-            <div class="text-sm text-color-secondary">Approved</div>
+            <div class="text-sm text-color-secondary">Approved Applications</div>
           </div>
         </div>
       </div>
 
-      <div class="flex justify-content-end mb-4">
-        <Button label="Export CSV" icon="pi pi-download" @click="handleExport" />
+      <div class="flex justify-content-end gap-2 mb-4">
+        <Button label="Export CSV" icon="pi pi-download" severity="secondary" @click="handleExport('csv')" />
+        <Button label="Export XLSX" icon="pi pi-download" severity="secondary" @click="handleExport('xlsx')" />
+        <Button label="Export PDF" icon="pi pi-download" @click="handleExport('pdf')" />
       </div>
 
       <div class="grid">

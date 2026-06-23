@@ -2,15 +2,17 @@
 import { ref, onMounted } from 'vue'
 import { useAbortController } from '@/composables/useAbortController'
 import { getCalls, createCall, updateCall, changeCallStatus } from '@/api/calls'
+import { getPrograms } from '@/api/programs'
 import { useToast } from 'primevue/usetoast'
 import StatusBadge from '@/components/StatusBadge.vue'
 
 const calls = ref([])
+const programs = ref([])
 const loading = ref(true)
 const showDialog = ref(false)
 const editItem = ref(null)
 const saving = ref(false)
-const form = ref({ title: '', description: '', start_date: null, end_date: null })
+const form = ref({ title: '', description: '', program_id: null, start_date: null, end_date: null })
 const toast = useToast()
 const { signal } = useAbortController()
 
@@ -44,8 +46,12 @@ onMounted(fetchCalls)
 async function fetchCalls() {
   loading.value = true
   try {
-    const { data } = await getCalls(undefined, { signal })
-    calls.value = data.items
+    const [callsRes, progRes] = await Promise.all([
+      getCalls(undefined, { signal }),
+      getPrograms(undefined, { signal })
+    ])
+    calls.value = callsRes.data.items
+    programs.value = progRes.data.items
   } catch { toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 }) } finally {
     loading.value = false
   }
@@ -53,7 +59,7 @@ async function fetchCalls() {
 
 function openCreate() {
   editItem.value = null
-  form.value = { title: '', description: '', start_date: null, end_date: null }
+  form.value = { title: '', description: '', program_id: null, start_date: null, end_date: null }
   showDialog.value = true
 }
 
@@ -97,12 +103,13 @@ async function handleStatusChange(call, newStatus) {
       <div class="flex flex-column gap-3">
         <InputText v-model="form.title" placeholder="Title" />
         <Textarea v-model="form.description" placeholder="Description" rows="3" />
+        <Dropdown v-model="form.program_id" :options="programs" optionLabel="title" optionValue="id" placeholder="Program" />
         <Calendar v-model="form.start_date" placeholder="Start Date" />
         <Calendar v-model="form.end_date" placeholder="End Date" />
       </div>
       <template #footer>
         <Button label="Cancel" severity="secondary" @click="showDialog = false" />
-        <Button label="Save" :loading="saving" @click="handleSave" />
+        <Button label="Save" :loading="saving" :disabled="!form.title || !form.program_id || !form.start_date || !form.end_date" @click="handleSave" />
       </template>
     </Dialog>
 
@@ -137,7 +144,7 @@ async function handleStatusChange(call, newStatus) {
             <div class="flex gap-1">
               <Button icon="pi pi-pencil" text size="small" @click="openEdit(data)" />
               <Dropdown
-                :modelValue="data.status"
+                placeholder="Change"
                 :options="getAllowedTransitions(data.status)"
                 optionLabel="label"
                 optionValue="value"
