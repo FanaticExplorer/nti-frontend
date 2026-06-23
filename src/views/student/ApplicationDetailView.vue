@@ -20,6 +20,11 @@ const editing = ref(false)
 const comments = ref([])
 
 const formData = ref({})
+const docClassification = ref('internal')
+const docType = ref('')
+
+const classOptions = ['public', 'internal', 'confidential']
+const typeOptions = ['Executive Summary', 'Technical Architecture', 'Roadmap', 'Budget Plan', 'Risk Analysis', 'Monetization Model', 'CV', 'Other']
 
 onMounted(async () => {
   await fetchData()
@@ -84,6 +89,8 @@ async function handleUpload(event) {
   try {
     const fd = new FormData()
     fd.append('file', file)
+    fd.append('classification', docClassification.value)
+    if (docType.value) fd.append('document_type', docType.value)
     await uploadDocument(app.value.id, fd)
     await fetchData()
   } catch (err) {
@@ -190,7 +197,11 @@ async function handleDeleteDocument(docId) {
         </div>
         <div v-else class="text-color-secondary mb-3">No documents uploaded.</div>
         <div v-if="app.status === 'draft'">
-          <FileUpload mode="basic" accept="*/*" :maxFileSize="10000000" customUpload auto @select="handleUpload" :disabled="uploading" />
+          <div class="flex gap-2 mb-2">
+            <Dropdown v-model="docClassification" :options="classOptions" placeholder="Classification" class="w-9rem" />
+            <Dropdown v-model="docType" :options="typeOptions" placeholder="Document type" class="w-12rem" />
+          </div>
+          <FileUpload mode="basic" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" :maxFileSize="10000000" customUpload auto @select="handleUpload" :disabled="uploading" />
           <small v-if="uploading" class="text-color-secondary ml-2">Uploading...</small>
         </div>
       </div>
@@ -203,7 +214,7 @@ async function handleDeleteDocument(docId) {
               <div>
                 <div class="flex align-items-center gap-2 mb-1">
                   <StatusBadge :status="item.new_status" />
-                  <small class="text-color-secondary">{{ new Date(item.created_at).toLocaleString() }}</small>
+                  <small class="text-color-secondary">{{ new Date(item.changed_at).toLocaleString() }}</small>
                 </div>
                 <p v-if="item.comment" class="text-sm text-color-secondary m-0">{{ item.comment }}</p>
               </div>

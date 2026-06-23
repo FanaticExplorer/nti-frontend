@@ -32,9 +32,9 @@ onMounted(async () => {
   try {
     const [callsRes, teamsRes] = await Promise.all([
       getCalls(undefined, { signal }),
-      getMyTeams(undefined, { signal })
+      getMyTeams({ signal })
     ])
-    calls.value = callsRes.data.items
+    calls.value = callsRes.data.items.filter(c => ['open', 'matching'].includes(c.status))
     teams.value = teamsRes.data.items
 
     const callId = route.query.call_id
