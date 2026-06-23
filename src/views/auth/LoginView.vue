@@ -17,7 +17,10 @@ async function handleLogin() {
   try {
     await auth.login(email.value, password.value)
   } catch (err) {
-    const msg = err.response?.data?.detail || 'Login failed. Please try again.'
+    const status = err.response?.status
+    const msg = status === 429
+      ? 'Too many login attempts. Please wait a minute.'
+      : err.response?.data?.detail || 'Login failed. Please try again.'
     error.value = msg
     toast.add({ severity: 'error', summary: 'Login failed', detail: msg, life: 5000 })
   } finally {

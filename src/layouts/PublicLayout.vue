@@ -5,6 +5,16 @@ import { computed } from 'vue'
 const auth = useAuthStore()
 const isLoggedIn = computed(() => auth.isLoggedIn)
 const user = computed(() => auth.user)
+
+const dashboardLink = computed(() => {
+  const role = auth.userRole
+  if (['student', 'team_leader'].includes(role)) return '/student/dashboard'
+  if (role === 'firm') return '/firm/dashboard'
+  if (role === 'mentor') return '/mentor/dashboard'
+  if (role === 'evaluator') return '/evaluator/dashboard'
+  if (['nti_admin', 'super_admin', 'content_editor'].includes(role)) return '/admin/dashboard'
+  return '/'
+})
 </script>
 
 <template>
@@ -24,6 +34,7 @@ const user = computed(() => auth.user)
         </nav>
         <div class="flex align-items-center gap-2">
           <template v-if="isLoggedIn">
+            <router-link :to="dashboardLink" class="p-button p-button-sm no-underline">Dashboard</router-link>
             <span class="text-color-secondary">{{ user?.full_name }}</span>
             <Button label="Logout" severity="secondary" variant="text" size="small" @click="auth.logout()" />
           </template>
