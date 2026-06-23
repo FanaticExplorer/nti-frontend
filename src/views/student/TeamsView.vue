@@ -1,16 +1,23 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useAbortController } from '@/composables/useAbortController'
-import { getMyTeams, createTeam } from '@/api/teams'
+import { getMyTeams, getAllTeams, createTeam, joinTeam } from '@/api/teams'
 import { useToast } from 'primevue/usetoast'
 
 const toast = useToast()
 const { signal } = useAbortController()
 const teams = ref([])
+const allTeams = ref([])
 const loading = ref(true)
 const showCreate = ref(false)
 const creating = ref(false)
+const joining = ref(null)
 const newTeam = ref({ name: '', program_type: 'A' })
+
+const joinableTeams = computed(() => {
+  const myIds = new Set(teams.value.map(t => t.id))
+  return allTeams.value.filter(t => !myIds.has(t.id))
+})
 
 const programTypes = [
   { label: 'Program A', value: 'A' },
@@ -19,8 +26,12 @@ const programTypes = [
 
 onMounted(async () => {
   try {
-    const { data } = await getMyTeams(undefined, { signal })
-    teams.value = data.items
+    const [myRes, allRes] = await Promise.all([
+      getMyTeams({ signal }),
+      getAllTeams({ signal })
+    ])
+    teams.value = myRes.data.items
+    allTeams.value = allRes.data.items
   } catch (err) {
     if (err?.code === "ERR_CANCELED") return
     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 })
@@ -35,13 +46,32 @@ async function handleCreate() {
     await createTeam(newTeam.value)
     showCreate.value = false
     newTeam.value = { name: '', program_type: 'A' }
-    const { data } = await getMyTeams(undefined, { signal })
+    const { data } = await getMyTeams({ signal })
     teams.value = data.items
   } catch (err) {
     if (err?.code === "ERR_CANCELED") return
     toast.add({ severity: 'error', summary: 'Error', detail: 'Action failed', life: 5000 })
   } finally {
     creating.value = false
+  }
+}
+
+async function handleJoin(teamId) {
+  joining.value = teamId
+  try {
+    await joinTeam(teamId)
+    toast.add({ severity: 'success', summary: 'Joined team', life: 3000 })
+    const [myRes, allRes] = await Promise.all([
+      getMyTeams({ signal }),
+      getAllTeams({ signal })
+    ])
+    teams.value = myRes.data.items
+    allTeams.value = allRes.data.items
+  } catch (err) {
+    if (err?.code === "ERR_CANCELED") return
+    toast.add({ severity: 'error', summary: 'Error', detail: err?.response?.data?.detail || 'Action failed', life: 5000 })
+  } finally {
+    joining.value = null
   }
 }
 </script>
@@ -79,9 +109,7 @@ async function handleCreate() {
           <h4 class="mb-1">{{ team.name }}</h4>
           <div class="flex gap-2 align-items-center mb-2">
             <Tag :value="team.program_type" severity="info" />
-            <small class="text-color-secondary">{{ team.role }}</small>
           </div>
-          <p class="text-sm text-color-secondary mb-2">{{ team.member_count }} members</p>
           <router-link :to="`/student/teams/${team.id}`" class="p-button p-button-sm no-underline">View</router-link>
         </div>
       </div>
@@ -89,6 +117,23 @@ async function handleCreate() {
     <div v-else class="text-center text-color-secondary p-4 surface-card border-round">
       <i class="pi pi-users text-3xl mb-2"></i>
       <p>No teams yet. Create your first team.</p>
+    </div>
+
+    <h3 class="text-lg mt-4 mb-3">Join a Team</h3>
+    <div v-if="joinableTeams.length" class="grid">
+      <div v-for="team in joinableTeams" :key="team.id" class="col-12 md:col-6">
+        <div class="surface-card p-3 border-round shadow-1">
+          <h4 class="mb-1">{{ team.name }}</h4>
+          <div class="flex gap-2 align-items-center mb-2">
+            <Tag :value="team.program_type" severity="info" />
+            <small class="text-color-secondary">{{ team.leader_name || 'Unknown' }} · {{ team.member_count }} members</small>
+          </div>
+          <Button label="Join" icon="pi pi-user-plus" size="small" :loading="joining === team.id" @click="handleJoin(team.id)" />
+        </div>
+      </div>
+    </div>
+    <div v-else class="text-center text-color-secondary p-3 surface-card border-round">
+      <p>No other teams to join.</p>
     </div>
   </div>
 </template>

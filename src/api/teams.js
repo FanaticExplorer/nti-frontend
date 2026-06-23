@@ -1,6 +1,7 @@
 import api from './index.js'
 
 export const getMyTeams = (config = {}) => api.get('/teams/my', config)
+export const getAllTeams = (config = {}) => api.get('/teams', config)
 export const getTeam = (id, config = {}) => api.get(`/teams/${id}`, config)
 export const createTeam = (data) => api.post('/teams', data)
 export const joinTeam = (id) => api.post(`/teams/${id}/join`)
