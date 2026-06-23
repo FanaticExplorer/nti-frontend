@@ -21,7 +21,7 @@ onMounted(async () => {
       getCalls(undefined, { signal })
     ])
     org.value = orgsRes.data.items?.[0] || null
-    calls.value = callsRes.data.items.filter((c) => c.organization_id === org.value?.id)
+    calls.value = callsRes.data.items
   } catch (err) {
     if (err?.code === "ERR_CANCELED") return
     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 })

@@ -2,10 +2,14 @@
 import { ref, onMounted } from 'vue'
 import { useAbortController } from '@/composables/useAbortController'
 import { getCalls, createCall, updateCall, changeCallStatus } from '@/api/calls'
+import { getPrograms } from '@/api/programs'
+import { getOrganizations } from '@/api/organizations'
 import { useToast } from 'primevue/usetoast'
 import StatusBadge from '@/components/StatusBadge.vue'
 
 const calls = ref([])
+const programs = ref([])
+const org = ref(null)
 const loading = ref(true)
 const showCreate = ref(false)
 const showEdit = ref(false)
@@ -19,6 +23,8 @@ const form = ref({
   description: '',
   technical_spec: '',
   budget: '',
+  program_id: null,
+  organization_id: null,
   start_date: null,
   end_date: null
 })
@@ -53,8 +59,14 @@ onMounted(fetchCalls)
 async function fetchCalls() {
   loading.value = true
   try {
-    const { data } = await getCalls(undefined, { signal })
-    calls.value = data.items
+    const [callsRes, progRes, orgRes] = await Promise.all([
+      getCalls(undefined, { signal }),
+      getPrograms(undefined, { signal }),
+      getOrganizations(undefined, { signal })
+    ])
+    calls.value = callsRes.data.items
+    programs.value = progRes.data.items
+    org.value = orgRes.data.items?.[0] || null
   } catch (err) {
     if (err?.code === "ERR_CANCELED") return
     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 })
@@ -64,7 +76,7 @@ async function fetchCalls() {
 }
 
 function openCreate() {
-  form.value = { title: '', description: '', technical_spec: '', budget: '', start_date: null, end_date: null }
+  form.value = { title: '', description: '', technical_spec: '', budget: '', program_id: null, organization_id: org.value?.id || null, start_date: null, end_date: null }
   showCreate.value = true
 }
 
@@ -124,6 +136,7 @@ async function handleStatusChange(call, newStatus) {
       <div class="flex flex-column gap-3">
         <InputText v-model="form.title" placeholder="Title" />
         <Textarea v-model="form.description" placeholder="Description" rows="3" />
+        <Dropdown v-model="form.program_id" :options="programs" optionLabel="title" optionValue="id" placeholder="Program" />
         <Textarea v-model="form.technical_spec" placeholder="Technical Specification" rows="3" />
         <InputText v-model="form.budget" placeholder="Budget" />
         <Calendar v-model="form.start_date" placeholder="Start Date" />
@@ -131,7 +144,7 @@ async function handleStatusChange(call, newStatus) {
       </div>
       <template #footer>
         <Button label="Cancel" severity="secondary" @click="showCreate = false" />
-        <Button label="Create" :loading="saving" @click="handleCreate" />
+        <Button label="Create" :loading="saving" :disabled="!form.title || !form.program_id || !form.start_date || !form.end_date" @click="handleCreate" />
       </template>
     </Dialog>
 
@@ -139,6 +152,7 @@ async function handleStatusChange(call, newStatus) {
       <div class="flex flex-column gap-3">
         <InputText v-model="form.title" placeholder="Title" />
         <Textarea v-model="form.description" placeholder="Description" rows="3" />
+        <Dropdown v-model="form.program_id" :options="programs" optionLabel="title" optionValue="id" placeholder="Program" />
         <Textarea v-model="form.technical_spec" placeholder="Technical Specification" rows="3" />
         <InputText v-model="form.budget" placeholder="Budget" />
         <Calendar v-model="form.start_date" placeholder="Start Date" />
@@ -146,7 +160,7 @@ async function handleStatusChange(call, newStatus) {
       </div>
       <template #footer>
         <Button label="Cancel" severity="secondary" @click="showEdit = false" />
-        <Button label="Save" :loading="saving" @click="handleEdit" />
+        <Button label="Save" :loading="saving" :disabled="!form.title || !form.program_id || !form.start_date || !form.end_date" @click="handleEdit" />
       </template>
     </Dialog>
 
@@ -170,7 +184,7 @@ async function handleStatusChange(call, newStatus) {
           <template #body="{ data }">
             <div class="flex gap-1">
               <Button icon="pi pi-pencil" text size="small" @click="openEdit(data)" />
-              <Dropdown v-model="data.status" :options="getAllowedTransitions(data.status)" optionLabel="label" optionValue="value" @change="(e) => handleStatusChange(data, e.value)" class="w-8rem" />
+              <Dropdown placeholder="Change" :options="getAllowedTransitions(data.status)" optionLabel="label" optionValue="value" @change="(e) => handleStatusChange(data, e.value)" class="w-8rem" />
             </div>
           </template>
         </Column>

@@ -2,10 +2,12 @@
 import { ref, onMounted } from 'vue'
 import { useAbortController } from '@/composables/useAbortController'
 import { getTechSpecs, createTechSpec, updateTechSpec, deleteTechSpec } from '@/api/techSpecs'
+import { getCalls } from '@/api/calls'
 import { useToast } from 'primevue/usetoast'
 import StatusBadge from '@/components/StatusBadge.vue'
 
 const techSpecs = ref([])
+const calls = ref([])
 const loading = ref(true)
 const showCreate = ref(false)
 const showEdit = ref(false)
@@ -29,8 +31,12 @@ onMounted(fetchTechSpecs)
 async function fetchTechSpecs() {
   loading.value = true
   try {
-    const { data } = await getTechSpecs(undefined, { signal })
-    techSpecs.value = data.items
+    const [specRes, callsRes] = await Promise.all([
+      getTechSpecs(undefined, { signal }),
+      getCalls(undefined, { signal })
+    ])
+    techSpecs.value = specRes.data.items
+    calls.value = callsRes.data.items.filter(c => c.program?.type === 'B')
   } catch (err) {
     if (err?.code === "ERR_CANCELED") return
     toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load data', life: 5000 })
@@ -47,7 +53,8 @@ function openCreate() {
 async function handleCreate() {
   saving.value = true
   try {
-    await createTechSpec(form.value)
+    const payload = { ...form.value, product_owner_id: form.value.product_owner_id || null }
+    await createTechSpec(payload)
     showCreate.value = false
     await fetchTechSpecs()
     toast.add({ severity: 'success', summary: 'Created', life: 3000 })
@@ -74,7 +81,8 @@ function openEdit(item) {
 async function handleEdit() {
   saving.value = true
   try {
-    await updateTechSpec(editItem.value.id, form.value)
+    const payload = { ...form.value, product_owner_id: form.value.product_owner_id || null }
+    await updateTechSpec(editItem.value.id, payload)
     showEdit.value = false
     await fetchTechSpecs()
     toast.add({ severity: 'success', summary: 'Updated', life: 3000 })
@@ -132,8 +140,12 @@ function canEdit(item) {
           <InputText v-model="form.budget" placeholder="Budget" />
         </div>
         <div class="flex flex-column gap-1">
-          <label class="text-sm">Call ID</label>
-          <InputText v-model="form.call_id" placeholder="Call ID (optional)" />
+          <label class="text-sm">Call</label>
+          <Dropdown v-model="form.call_id" :options="calls" optionLabel="title" optionValue="id" placeholder="Select a call">
+            <template #option="{ option }">
+              {{ option.title }} <Tag :value="option.program?.type" severity="info" class="ml-1" /><Tag :value="option.status" severity="secondary" class="ml-1" />
+            </template>
+          </Dropdown>
         </div>
         <div class="flex flex-column gap-1">
           <label class="text-sm">Product Owner ID</label>
@@ -161,12 +173,16 @@ function canEdit(item) {
           <InputText v-model="form.budget" placeholder="Budget" />
         </div>
         <div class="flex flex-column gap-1">
-          <label class="text-sm">Call ID</label>
-          <InputText v-model="form.call_id" placeholder="Call ID" />
+          <label class="text-sm">Call</label>
+          <Dropdown v-model="form.call_id" :options="calls" optionLabel="title" optionValue="id" placeholder="Select a call">
+            <template #option="{ option }">
+              {{ option.title }} <Tag :value="option.program?.type" severity="info" class="ml-1" /><Tag :value="option.status" severity="secondary" class="ml-1" />
+            </template>
+          </Dropdown>
         </div>
         <div class="flex flex-column gap-1">
           <label class="text-sm">Product Owner ID</label>
-          <InputText v-model="form.product_owner_id" placeholder="Product Owner ID" />
+          <InputText v-model="form.product_owner_id" placeholder="Product Owner ID (optional)" />
         </div>
       </div>
       <template #footer>

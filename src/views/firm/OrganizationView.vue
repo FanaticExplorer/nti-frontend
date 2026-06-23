@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useAbortController } from '@/composables/useAbortController'
 import { useToast } from 'primevue/usetoast'
-import { getOrganizations, updateOrganization, addOrganizationMember, getOrganizationMembers, updateOrganizationMember, removeOrganizationMember } from '@/api/organizations'
+import { getOrganizations, createOrganization, updateOrganization, addOrganizationMember, getOrganizationMembers, updateOrganizationMember, removeOrganizationMember } from '@/api/organizations'
 import StatusBadge from '@/components/StatusBadge.vue'
 
 const toast = useToast()
@@ -12,6 +12,8 @@ const loading = ref(true)
 const editing = ref(false)
 const saving = ref(false)
 const form = ref({})
+const creating = ref(false)
+const showCreate = ref(false)
 
 const newMemberEmail = ref('')
 const newMemberRole = ref('')
@@ -57,6 +59,22 @@ async function handleSave() {
     toast.add({ severity: 'error', summary: 'Error', detail: err.response?.data?.detail || 'Action failed', life: 5000 })
   } finally {
     saving.value = false
+  }
+}
+
+async function handleCreate() {
+  creating.value = true
+  try {
+    const { data } = await createOrganization(form.value)
+    org.value = data
+    showCreate.value = false
+    form.value = { ...data }
+    toast.add({ severity: 'success', summary: 'Organization created', life: 3000 })
+  } catch (err) {
+    if (err?.code === "ERR_CANCELED") return
+    toast.add({ severity: 'error', summary: 'Error', detail: err.response?.data?.detail || 'Action failed', life: 5000 })
+  } finally {
+    creating.value = false
   }
 }
 
@@ -170,14 +188,14 @@ async function handleRemoveMember() {
           </div>
           <div class="flex flex-column gap-1">
             <label class="text-sm">Contact Email</label>
-            <InputText v-model="form.contact_email" class="w-full" />
+            <InputText v-model="form.contact_email" class="w-full" type="email" />
           </div>
           <div class="flex flex-column gap-1">
             <label class="text-sm">Description</label>
             <Textarea v-model="form.description" rows="3" />
           </div>
           <div class="flex gap-2">
-            <Button label="Save" :loading="saving" @click="handleSave" />
+            <Button label="Save" :loading="saving" :disabled="!form.name || !form.contact_email" @click="handleSave" />
             <Button label="Cancel" severity="secondary" @click="editing = false" />
           </div>
         </div>
@@ -232,6 +250,35 @@ async function handleRemoveMember() {
         </template>
       </Dialog>
     </template>
-    <div v-else class="text-center text-color-secondary p-4">No organization found.</div>
+    <div v-else class="surface-card p-4 border-round shadow-1" style="max-width: 600px;">
+      <div v-if="!showCreate" class="text-center">
+        <i class="pi pi-building text-3xl mb-2"></i>
+        <p class="text-color-secondary mb-3">No organization found. Create one to get started.</p>
+        <Button label="Create Organization" icon="pi pi-plus" @click="showCreate = true" />
+      </div>
+      <div v-else class="flex flex-column gap-3">
+        <h3 class="m-0">Create Organization</h3>
+        <div class="flex flex-column gap-1">
+          <label class="text-sm">Name *</label>
+          <InputText v-model="form.name" class="w-full" placeholder="Company name" />
+        </div>
+        <div class="flex flex-column gap-1">
+          <label class="text-sm">Contact Email *</label>
+          <InputText v-model="form.contact_email" class="w-full" placeholder="contact@company.com" />
+        </div>
+        <div class="flex flex-column gap-1">
+          <label class="text-sm">Sector</label>
+          <InputText v-model="form.sector" class="w-full" />
+        </div>
+        <div class="flex flex-column gap-1">
+          <label class="text-sm">Description</label>
+          <Textarea v-model="form.description" rows="3" />
+        </div>
+        <div class="flex gap-2">
+          <Button label="Create" :loading="creating" @click="handleCreate" />
+          <Button label="Cancel" severity="secondary" @click="showCreate = false" />
+        </div>
+      </div>
+    </div>
   </div>
 </template>
